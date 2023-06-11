@@ -1,6 +1,6 @@
 # MdtModelView
 
-
+Set of libraries extending the Qt model-view framework
 
 ## Getting started
 

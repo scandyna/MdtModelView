@@ -1,0 +1,24 @@
+
+include:
+  - component: $CI_SERVER_FQDN/scandyna/gitlab-ci-cd-cpp-components/BuildAndTest_Ubuntu-18-04_gcc8_x86_64@0.0.15
+    inputs:
+      build_type: 'Debug'
+      shared_libs: 'True'
+  - component: $CI_SERVER_FQDN/scandyna/gitlab-ci-cd-cpp-components/BuildAndTest_Ubuntu-18-04_gcc8_x86_64@0.0.15
+    inputs:
+      build_type: 'Release'
+      shared_libs: 'True'
+  - component: $CI_SERVER_FQDN/scandyna/gitlab-ci-cd-cpp-components/BuildAndTest_Ubuntu-18-04_gcc8_x86_64@0.0.15
+    inputs:
+      build_type: 'Release'
+      shared_libs: 'False'
+  - component: $CI_SERVER_FQDN/scandyna/gitlab-ci-cd-cpp-components/BuildAndTest_Ubuntu-18-04_clang10_x86_64_libcxx@0.0.15
+    inputs:
+      build_type: 'Debug'
+      shared_libs: 'True'
+  - component: $CI_SERVER_FQDN/scandyna/gitlab-ci-cd-cpp-components/BuildAndTest_Ubuntu-18-04_clang10_x86_64_libcxx@0.0.15
+    inputs:
+      build_type: 'Release'
+      shared_libs: 'True'
+      specifiy build_type once available
+- component: $CI_SERVER_FQDN/scandyna/gitlab-ci-cd-cpp-components/BuildAndTest_Ubuntu-18-04_gcc8_x86_64_ASanUBSan@0.0.15

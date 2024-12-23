@@ -38,6 +38,7 @@ set(CMAKE_VISIBILITY_INLINES_HIDDEN YES)
 # option(BUILD_APPS "Build the applications (tools)" OFF)
 option(BUILD_TESTS "Build the tests" OFF)
 option(BUILD_BENCHMARKS "Build the benchmarks" OFF)
+option(BUILD_EXAMPLES "Build the examples" OFF)
 option(BUILD_DOCS "Build the documentations" OFF)
 mdt_set_available_build_types(Release Debug RelWithDebInfo MinSizeRel)
 option(WARNING_AS_ERROR "Treat warnings as errors" OFF)
@@ -114,6 +115,10 @@ find_package(Mdt0 REQUIRED COMPONENTS Numeric)
 # if(BUILD_APPS)
 #   find_package(Qt5 REQUIRED COMPONENTS Widgets)
 # endif()
+
+if(BUILD_EXAMPLES)
+  find_package(Qt5 REQUIRED COMPONENTS Widgets)
+endif()
 
 # For header only library,no component is defined.
 # https://cmake.org/pipermail/cmake/2013-September/055941.html
@@ -205,6 +210,10 @@ add_subdirectory(libs)
 # if(BUILD_APPS)
 #   add_subdirectory(apps)
 # endif()
+
+if(BUILD_EXAMPLES)
+  add_subdirectory(examples)
+endif()
 
 if(BUILD_DOCS)
   add_subdirectory(doc)

@@ -1,8 +1,63 @@
 # MdtModelView
 
-Set of libraries extending the Qt model-view framework
+Set of libraries extending the Qt model-view framework.
 
-# Just a change
+This library is composed of some components:
+
+| Component         | Description                                                                     | Main dependency    |
+|-------------------|:--------------------------------------------------------------------------------|--------------------|
+| ItemModel         | Provides some helpers, like an abstract table model, selection model and others | QtCore             |
+| ItemViewQtWidgets | Provides some helpers for views based on QtWidgets                              | QtWidgets          |
+| ItemModelTestLib  | Provides some helpers to write tests for items models                           | QtCore, MdtNumeric |
+
+# Usage
+
+This example will use ItemModel.
+The principle is the same for the other components.
+
+For the usage of classes and functions for all components,
+see [the API documentation](https://scandyna.gitlab.io/mdtmodelview)
+
+## CMake project description
+
+Update your CMakeLists.txt to use the required libraries:
+```cmake
+cmake_minimum_required(VERSION 3.15)
+project(MyApp)
+
+find_package(Threads REQUIRED)
+find_package(Qt5 REQUIRED COMPONENTS Core)
+find_package(Mdt0 REQUIRED COMPONENTS ItemModel )
+
+add_executable(myApp myApp.cpp)
+target_link_libraries(myApp Mdt0::ItemModel)
+```
+
+## Project using Conan
+
+If you use [Conan](https://conan.io/),
+add MdtItemModel as requirement in your `conanfile.txt`:
+```conan
+[requires]
+mdtitemmodel/x.y.z@scandyna/testing
+
+[generators]
+CMakeDeps
+CMakeToolchain
+VirtualBuildEnv
+```
+
+Here is the mapping between components and the Conan package name:
+| Component         | Package name         |
+|-------------------|----------------------|
+| ItemModel         | mdtitemmodel         |
+| ItemViewQtWidgets | mdtitemviewqtwidgets |
+| ItemModelTestLib  | mdtitemmodeltestlib  |
+
+
+---
+
+# stuff from the generated template
 
 ## Getting started
 

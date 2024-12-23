@@ -94,6 +94,16 @@ else()
 endif()
 
 #######################
+# Compilers issues
+#######################
+
+# Workaround for the "too many sections" error on some MinGW compiler
+# See: https://stackoverflow.com/questions/16596876/object-file-has-too-many-sections
+if(MINGW)
+  add_compile_options(-Wa,-mbig-obj)
+endif()
+
+#######################
 # Dependencies
 #######################
 

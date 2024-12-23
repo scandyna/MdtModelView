@@ -109,6 +109,7 @@ endif()
 
 find_package(Threads REQUIRED)
 find_package(Qt5 REQUIRED COMPONENTS Core)
+find_package(Mdt0 REQUIRED COMPONENTS Numeric)
 
 # if(BUILD_APPS)
 #   find_package(Qt5 REQUIRED COMPONENTS Widgets)

@@ -8,7 +8,7 @@ This library is composed of some components:
 |-------------------|:--------------------------------------------------------------------------------|--------------------|
 | ItemModel         | Provides some helpers, like an abstract table model, selection model and others | QtCore             |
 | ItemViewQtWidgets | Provides some helpers for views based on QtWidgets                              | QtWidgets          |
-| ItemModelTestLib  | Provides some helpers to write tests for items models                           | QtCore, MdtNumeric |
+| ItemModelTestLib  | Provides some helpers to write tests for item models                            | QtCore, MdtNumeric |
 
 # Usage
 

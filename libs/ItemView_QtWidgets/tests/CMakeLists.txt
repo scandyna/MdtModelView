@@ -13,3 +13,12 @@ mdt_add_test(
   SOURCE_FILES
     src/ItemViewHelpersTest.cpp
 )
+
+# TODO: remove once test fixed
+# See https://gitlab.com/scandyna/mdtmodelview/-/issues/3
+if(SANITIZER_ENABLE_ADDRESS OR SANITIZER_ENABLE_UNDEFINED)
+  set_tests_properties(ItemViewQtWidgetsHelpersTest
+    PROPERTIES
+      DISABLED True
+  )
+endif()

@@ -3,7 +3,7 @@
 
 add_subdirectory(ItemModel)
 add_subdirectory(ItemModel_TestLib)
-# add_subdirectory(ItemView_QtWidgets)
+add_subdirectory(ItemView_QtWidgets)
 
 # TODO: TestLib should only be added if tests/benchamrks are built ?
 # add_subdirectory(TestLib)

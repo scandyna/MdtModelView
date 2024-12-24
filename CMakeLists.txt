@@ -35,6 +35,21 @@ include(MdtSanitizers)
 set(CMAKE_CXX_VISIBILITY_PRESET hidden)
 set(CMAKE_VISIBILITY_INLINES_HIDDEN YES)
 
+
+# When working on MdtModelView, we should build all libraries,
+# tests, benchmarks and examples.
+#
+# When creating packages, we should only build the library to package.
+# Also, if a library depends on another one in this build tree,
+# we have to take care to depend (link) to the IMPORT target created by another package,
+# not the one created in this project.
+# Example: ItemViewQtWidgets depends on ItemModel
+# Note: building only one component and tests, benchmarks, ... is not supported.
+option(BUILD_ITEM_MODEL "Build the ItemModel component" ON)
+option(BUILD_ITEM_VIEW_QT_WIDGETS "Build the ItemViewQtWidgets component" ON)
+option(BUILD_ITEM_MODEL_TEST_LIB "Build the ItemModelTestLib component" ON)
+
+
 # option(BUILD_APPS "Build the applications (tools)" OFF)
 option(BUILD_TESTS "Build the tests" OFF)
 option(BUILD_BENCHMARKS "Build the benchmarks" OFF)
@@ -71,6 +86,7 @@ mdt_add_thread_sanitizer_option_if_available(SANITIZER_ENABLE_THREAD
   HELP_STRING "Enable thread sanitizer for RelWithDebInfo, Debug build (can be incompatible with other sanitizers)"
   INITIAL_VALUE OFF
 )
+
 
 #######################
 # Warnings
@@ -110,12 +126,16 @@ endif()
 
 find_package(Threads REQUIRED)
 find_package(Qt5 REQUIRED COMPONENTS Core)
-find_package(Mdt0 REQUIRED COMPONENTS Numeric)
+
+if(BUILD_ITEM_MODEL_TEST_LIB)
+  find_package(Mdt0 REQUIRED COMPONENTS Numeric)
+endif()
 
 # if(BUILD_APPS)
 #   find_package(Qt5 REQUIRED COMPONENTS Widgets)
 # endif()
 
+# TODO: also required by ItemViewQtWidgets
 if(BUILD_EXAMPLES)
   find_package(Qt5 REQUIRED COMPONENTS Widgets)
 endif()

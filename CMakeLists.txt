@@ -49,6 +49,7 @@ option(BUILD_ITEM_MODEL "Build the ItemModel component" ON)
 option(BUILD_ITEM_VIEW_QT_WIDGETS "Build the ItemViewQtWidgets component" ON)
 option(BUILD_ITEM_MODEL_TEST_LIB "Build the ItemModelTestLib component" ON)
 
+option(USE_ITEM_MODEL_IMPORT_TARGET "Use ItemModel IMPORT TARGET (relevant only while creating packages)" OFF)
 
 # option(BUILD_APPS "Build the applications (tools)" OFF)
 option(BUILD_TESTS "Build the tests" OFF)
@@ -126,6 +127,13 @@ endif()
 
 find_package(Threads REQUIRED)
 find_package(Qt5 REQUIRED COMPONENTS Core)
+
+
+if(USE_ITEM_MODEL_IMPORT_TARGET)
+  find_package(Mdt${MdtModelView_VERSION_MAJOR} REQUIRED COMPONENTS ItemModel)
+  add_library(Mdt::ItemModel ALIAS Mdt${MdtModelView_VERSION_MAJOR}::ItemModel)
+endif()
+
 
 if(BUILD_ITEM_MODEL_TEST_LIB)
   find_package(Mdt0 REQUIRED COMPONENTS Numeric)

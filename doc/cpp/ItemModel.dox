@@ -1,0 +1,166 @@
+// SPDX-License-Identifier: LGPL-3.0-or-later
+/****************************************************************************************
+ **
+ ** MdtModelView
+ ** Set of libraries extending the Qt model-view framework.
+ **
+ ** Copyright (C) 2023-2024 Philippe Steinmann.
+ **
+ *****************************************************************************************/
+
+/*! \page ItemModel_dox Item model library
+ *
+ * Some additions to Qt models (model/view framework)
+ *
+ * \section ItemModel_Models Models
+ *
+ * \startuml "ItemModel overview"
+ * !include ItemModel/ClassDiagrams/ItemModel_Overview.puml
+ * \enduml
+ *
+ * \sa Mdt::ItemModel::AbstractTableModel
+ *
+ * \section ItemModel_ProxyModels Proxy models
+ *
+ * \sa Mdt::ItemModel::ProxyModelPipeline
+ * \sa \ref ItemModel_ContainerExample
+ *
+ * \section ItemModel_Helpers Helpers
+ *
+ * \todo also put remove rows example from Mdt
+ *
+ * \todo Point to RowSelection and document a possible way to remove selected row
+ *  in 1 DB transaction
+ *
+ * Functions declared in Mdt/ItemModel/Helpers.h :
+ *
+ * \sa Mdt::ItemModel::itemSelectionIsSingleRow()
+ * \sa Mdt::ItemModel::updateRowInSingleRowItemSelection()
+ * \sa Mdt::ItemModel::removeSelectedRows()
+ * \sa Mdt::ItemModel::prependRowToModel()
+ * \sa Mdt::ItemModel::appendRowToModel()
+ * \sa Mdt::ItemModel
+ *
+ * Functions declared in Mdt/ItemView/Helpers.h :
+ *
+ * \sa Mdt::ItemView::removeSelectedRows()
+ *
+ * \section ItemModel_StlHelpers STL Helpers
+ *
+ * There are also some helper functions
+ * that can be used to implement item models using STL compliant containers.
+ *
+ * \sa Mdt::ItemModel::insertToStlContainer()
+ * \sa Mdt::ItemModel::removeFromStlContainer()
+ * \sa Mdt::ItemModel::removeFirstFromStlContainer()
+ * \sa Mdt::ItemModel::removeLastFromStlContainer()
+ * \sa Mdt::ItemModel
+ *
+ * \section ItemModel_Selections Selections
+ *
+ * \sa Mdt::ItemModel::RowSelection
+ * \sa Mdt::ItemModel::RowListView
+ * \sa Mdt::ItemModel::ItemSelectionModel
+ *
+ * \section ItemModel_ContainerExample Model container example
+ *
+ * In some case we can end up with a lot of item models and proxy models:
+ * \code
+ * class MainWindow : public QMainWindow
+ * {
+ *   // Constructor, public methods etc omitted here
+ *
+ *  private:
+ *
+ *   MyModel mModel;
+ *   FilterProxyModel mFilterModel;
+ *   SortProxyModel mSortModel;
+ *   FontProxyModel mFontModel;
+ *   Mdt::ItemModel::ProxyModelPipeline mModelPipeline;
+ *   // Probably other models to present other data
+ * };
+ * \endcode
+ *
+ * A solution is to create a model container
+ * that handles specific tasks for the data to present:
+ * \code
+ * class MyModelContainer
+ * {
+ *  public:
+ *
+ *   MyModelContainer()
+ *   {
+ *     mModelPipeline.setSourceModel(&mModel);
+ *     mModelPipeline.appendProxyModel(&mFilterModel);
+ *     mModelPipeline.appendProxyModel(&mSortModel);
+ *     mModelPipeline.appendProxyModel(&mFontModel);
+ *   }
+ *
+ *   QAbstractItemModel *modelForView()
+ *   {
+ *     return mModelPipeline.modelForView();
+ *   }
+ *
+ *   MyId idForViewIndex(const QModelIndex & viewIndex)
+ *   {
+ *     QModelIndex modelIndex = mModelPipeline.mapIndexToSource(viewIndex);
+ *
+ *     return mModel.idForRow( modelIndex.row() );
+ *   }
+ *
+ *  private:
+ *
+ *   MyModel mModel;
+ *   FilterProxyModel mFilterModel;
+ *   SortProxyModel mSortModel;
+ *   FontProxyModel mFontModel;
+ *   Mdt::ItemModel::ProxyModelPipeline mModelPipeline;
+ * };
+ * \endcode
+ *
+ * In above code, we avoid having lot of proxy models as members.
+ * We can also delegate some tasks to our class
+ * and only expose what is required.
+ *
+ * Creating such container class is not a lot of work,
+ * and more clean than dealing with some generic container.
+ * This is the reason why no such generic container is provided in this library.
+ *
+ * In the final code, we use our model container:
+ * \code
+ * class MainWindow : public QMainWindow
+ * {
+ *   // Constructor, public methods etc omitted here
+ *
+ *  private:
+ *
+ *   MyModelContainer mModels;
+ * };
+ * \endcode
+ *
+ * For a rich UI, we only end up with one container for each type of data to expose.
+ *
+ * \sa \ref ItemModel_ProxyModels
+ *
+ * \section ItemModel_TestLib Item model test lib
+ *
+ * \sa Mdt::ItemModel::TestLib::TableModelCommonBase
+ * \sa Mdt::ItemModel::TestLib::DataChangedSignalSpy
+ * \sa Mdt::ItemModel::TestLib::InsertRowsSignalsSpy
+ * \sa Mdt::ItemModel::TestLib::RemoveRowsSignalsSpy
+ *
+ * \subsection ItemModel_TestLib_RowSelectionHelpers RowSelectionHelpers
+ *
+ * \sa Mdt::ItemModel::TestLib::makeRowSelectionFromIndexList()
+ * \sa Mdt::ItemModel::TestLib::makeIndexListFromRowSelection()
+ * \sa Mdt::ItemModel::TestLib::selectRowsAndColumn()
+ */
+
+namespace Mdt{
+
+  /*! \brief Mdt::ItemModel namespace
+   */
+  namespace ItemModel {
+  }
+
+}

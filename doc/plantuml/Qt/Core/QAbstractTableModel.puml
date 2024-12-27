@@ -1,0 +1,9 @@
+@startuml
+!include QAbstractItemModel.puml
+
+class QAbstractTableModel {
+}
+
+QAbstractItemModel <|-- QAbstractTableModel
+
+@enduml

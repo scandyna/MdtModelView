@@ -1,0 +1,20 @@
+include:
+  - component: $CI_SERVER_FQDN/scandyna/gitlab-ci-cd-cpp-components/BuildApiDoc@0.0.16
+    inputs:
+      cmake_doc_option_string: '-DBUILD_DOCS=ON'
+
+
+pages:
+  stage: deploy
+  rules:
+    - if: $CI_COMMIT_TAG
+      when: on_success
+    - when: never
+  dependencies:
+    - BuildApiDoc
+  script:
+    - mkdir public
+    - mv build/doc/cpp-api/html public
+  artifacts:
+    paths:
+      - public

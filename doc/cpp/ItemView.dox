@@ -1,0 +1,30 @@
+// SPDX-License-Identifier: LGPL-3.0-or-later
+/****************************************************************************************
+ **
+ ** MdtModelView
+ ** Set of libraries extending the Qt model-view framework.
+ **
+ ** Copyright (C) 2023-2024 Philippe Steinmann.
+ **
+ *****************************************************************************************/
+
+/*! \page ItemView_dox Item view library
+ *
+ * Some additions to Qt views (model/view framework)
+ *
+ * \section ItemView_Helpers Helpers
+ *
+ * \todo also put remove rows example from Mdt
+ *
+ * \sa Mdt::ItemView::removeSelectedRows()
+ * \sa Mdt::ItemView
+ */
+
+namespace Mdt{
+
+  /*! \brief Mdt::ItemView namespace
+   */
+  namespace ItemView {
+  }
+
+}

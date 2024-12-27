@@ -1,0 +1,9 @@
+@startuml
+!include QObject.puml
+
+class QAbstractItemModel {
+}
+
+QObject <|-- QAbstractItemModel
+
+@enduml

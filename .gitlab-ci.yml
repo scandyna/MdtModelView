@@ -8,4 +8,4 @@ stages:
 include:
   - local: 'ci_cd/GitLab/BuildAndTest_Linux.yml'
   - local: 'ci_cd/GitLab/Conan_CreateAndTest_Linux.yml'
-  #- local: 'ci_cd/GitLab/Doc.yml'
+  - local: 'ci_cd/GitLab/Doc.yml'

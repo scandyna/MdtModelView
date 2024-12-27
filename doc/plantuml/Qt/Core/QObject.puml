@@ -1,0 +1,6 @@
+@startuml
+class QObject {
+  virtual +QObject(QObject *parent = nullptr)
+  \~QObject()
+}
+@enduml

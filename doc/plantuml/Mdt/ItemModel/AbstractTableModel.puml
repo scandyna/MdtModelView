@@ -1,0 +1,13 @@
+@startuml
+!include Qt/Core/QAbstractTableModel.puml
+
+namespace Mdt.ItemModel {
+
+  class AbstractTableModel {
+  }
+
+}
+
+QAbstractTableModel <|-- Mdt.ItemModel.AbstractTableModel
+
+@enduml

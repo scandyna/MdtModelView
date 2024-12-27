@@ -1,0 +1,7 @@
+@startuml
+!include Mdt/ItemModel/AbstractTableModel.puml
+
+hide methods
+hide attributes
+
+@enduml

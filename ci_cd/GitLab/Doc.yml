@@ -14,7 +14,7 @@ pages:
     - BuildApiDoc
   script:
     - mkdir public
-    - mv build/doc/cpp-api/html public
+    - mv build/doc/cpp-api/html/* public/
   artifacts:
     paths:
       - public

@@ -14,6 +14,7 @@ include:
       job_name_suffix: '_Tier2'
       components:
         - 'mdtitemviewqtwidgets'
+        - 'mdtitemmodeltestlib'
       build_types:
         - 'Debug'
       shared_libs:

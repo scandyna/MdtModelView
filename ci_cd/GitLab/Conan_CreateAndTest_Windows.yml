@@ -1,0 +1,23 @@
+
+include:
+  - component: $CI_SERVER_FQDN/scandyna/gitlab-ci-cd-cpp-components/Conan_CreateAndTest_Windows_gcc8_x86_64@0.0.16
+    inputs:
+      job_name_suffix: '_Tier1'
+      components:
+        - 'mdtitemmodel'
+      build_types:
+        - 'Debug'
+      shared_libs:
+        - 'True'
+  - component: $CI_SERVER_FQDN/scandyna/gitlab-ci-cd-cpp-components/Conan_CreateAndTest_Windows_gcc8_x86_64@0.0.16
+    inputs:
+      job_name_suffix: '_Tier2'
+      components:
+        - 'mdtitemviewqtwidgets'
+        - 'mdtitemmodeltestlib'
+      build_types:
+        - 'Debug'
+      shared_libs:
+        - 'True'
+      needs:
+        - 'Conan_CreateAndTest_Windows_gcc8_x86_64_Tier1'

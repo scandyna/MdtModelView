@@ -1,0 +1,18 @@
+
+include:
+  - component: $CI_SERVER_FQDN/scandyna/gitlab-ci-cd-cpp-components/BuildAndTest_Windows_gcc8_x86_64@0.0.16
+    inputs:
+      build_type: 'Debug'
+      shared_libs: 'True'
+  - component: $CI_SERVER_FQDN/scandyna/gitlab-ci-cd-cpp-components/BuildAndTest_Windows_gcc8_x86_64@0.0.16
+    inputs:
+      build_type: 'Release'
+      shared_libs: 'True'
+  - component: $CI_SERVER_FQDN/scandyna/gitlab-ci-cd-cpp-components/BuildAndTest_Windows_msvc16_x86_64@0.0.16
+    inputs:
+      build_type: 'Debug'
+      shared_libs: 'True'
+  - component: $CI_SERVER_FQDN/scandyna/gitlab-ci-cd-cpp-components/BuildAndTest_Windows_msvc16_x86_64@0.0.16
+    inputs:
+      build_type: 'Release'
+      shared_libs: 'True'

@@ -15,7 +15,7 @@ class MdtItemViewQtWidgetsConan(ConanFile):
   generators = "CMakeDeps", "VirtualBuildEnv"
 
   # See: https://docs.conan.io/en/latest/reference/conanfile/attributes.html#short-paths
-  #short_paths = True
+  short_paths = True
 
   def set_version(self):
     if not self.version:

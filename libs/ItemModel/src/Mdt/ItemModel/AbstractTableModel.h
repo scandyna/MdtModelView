@@ -4,7 +4,7 @@
  ** MdtModelView
  ** Set of libraries extending the Qt model-view framework.
  **
- ** Copyright (C) 2011-2024 Philippe Steinmann.
+ ** Copyright (C) 2011-2025 Philippe Steinmann.
  **
  *****************************************************************************************/
 #ifndef MDT_ITEM_MODEL_ABSTRACT_TABLE_MODEL_H
@@ -351,6 +351,8 @@ namespace Mdt{ namespace ItemModel{
    * \todo We should remove noexcept in the contract.
    * Think about models that maybe fetches data from file, DB, etc..
    * Thera are also incoherences between displayRoleData() , editRoleData() , setDisplayRoleData() , setEditRoleData() ...
+   *
+   * \sa StlContiguousContainerAdapter
    */
   class MDT_ITEMMODEL_EXPORT AbstractTableModel : public QAbstractTableModel
   {

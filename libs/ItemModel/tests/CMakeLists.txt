@@ -216,3 +216,11 @@ mdt_add_test(
   SOURCE_FILES
     src/ItemModelStlHelpersTest.cpp
 )
+
+mdt_add_test(
+  NAME StlContiguousContainerAdapterTest
+  TARGET stlContiguousContainerAdapterTest
+  DEPENDENCIES Mdt::ItemModel Mdt::ItemModelTestCommon Mdt::Catch2Main Mdt::Catch2Qt
+  SOURCE_FILES
+    src/StlContiguousContainerAdapterTest.cpp
+)

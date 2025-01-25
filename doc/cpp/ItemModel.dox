@@ -4,7 +4,7 @@
  ** MdtModelView
  ** Set of libraries extending the Qt model-view framework.
  **
- ** Copyright (C) 2023-2024 Philippe Steinmann.
+ ** Copyright (C) 2023-2025 Philippe Steinmann.
  **
  *****************************************************************************************/
 
@@ -46,6 +46,12 @@
  * \sa Mdt::ItemView::removeSelectedRows()
  *
  * \section ItemModel_StlHelpers STL Helpers
+ *
+ * \subsection ItemModel_StlContainerAdapter STL Container adapters
+ *
+ * \sa Mdt::ItemModel::StlContiguousContainerAdapter
+ *
+ * \subsection ItemModel_StlHelpFunctions STL helper functions
  *
  * There are also some helper functions
  * that can be used to implement item models using STL compliant containers.

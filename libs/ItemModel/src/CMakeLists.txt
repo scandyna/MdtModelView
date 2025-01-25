@@ -20,6 +20,7 @@ add_library(Mdt_ItemModel
   Mdt/ItemModel/ItemSelectionModel.cpp
   Mdt/ItemModel/Helpers.cpp
   Mdt/ItemModel/StlHelpers.cpp
+  Mdt/ItemModel/StlContiguousContainerAdapter.cpp
 )
 
 add_library(Mdt::ItemModel ALIAS Mdt_ItemModel)

@@ -16,6 +16,7 @@
 #include "Mdt/ItemModel/SharedStlContiguousContainerAdapter.h"
 
 #include <functional>
+#include <type_traits>
 
 using namespace Mdt::ItemModel;
 
@@ -74,6 +75,13 @@ using SharedTestContainerAdapter = SharedStlContiguousContainerAdapter< std::vec
     template<typename Container>
     struct StlContiguousContainerFunctionMap
     {
+      /*! \brief
+       *
+       * \todo propose a indexOf() based on find_if()
+       */
+      
+      /// \todo below seems wrong
+      
       /*! \brief STL const_iterator
        */
       using const_iterator = typename Container::const_iterator;
@@ -104,31 +112,160 @@ using SharedTestContainerAdapter = SharedStlContiguousContainerAdapter< std::vec
 
     };
 
-  template< typename Container, typename FunctionMap = StlContiguousContainerFunctionMap<Container> >
-  struct Adapter
+  /*! \brief
+   *
+   * \todo Maybe StlContiguousContainerTypeMap
+   */
+  template<typename Container>
+  struct StlContainerTypeMap
   {
-    using const_reference = typename FunctionMap::const_reference;
+    /*! \brief STL size_type
+     */
+    using size_type = typename Container::size_type;
+
+    /*! \brief STL value_type
+     */
+    using value_type = typename Container::value_type;
+
+    /*! \brief STL const_reference
+     */
+    using reference = typename Container::reference;
+
+    /*! \brief STL const_reference
+     *
+     * \todo document that const_reference is deduced from value_type, or use const_reference
+     */
+    using const_reference = const value_type &;
+
+    /*! \brief STL const_iterator
+     */
+    using const_iterator = typename Container::const_iterator;
+  };
+
+  /*! \brief Adapter to use STL style containers with Qt item models
+   *
+   * In Qt model/view, row acces is int index based.
+   * In the STL containers, index is std::size_t or iterator based.
+   *
+   * A goal of this adapter is to help to convert between those types
+   * in some checked way (contract programming based).
+   *
+   * This adapter can be used containers that are domain specific,
+   * and that do not provide all the STL required interface.
+   *
+   * Goal is to avoid having to adapt the container itself
+   * to be usable with an item model.
+   *
+   * \todo fix noexcept
+   *
+   * \tparam Container
+   * \tparam SizeType
+   *
+   * \tparam ValueType STL value_type provided by the container.
+   * This is a required type, void is not allowed.
+   * const_reference is also deduced from ValueType.
+   *
+   * \tparam ConstIterator STL const_iterator provided by the container.
+   * Can be void if the container not provides const_iterator.
+   * If the container provides const_iterator,
+   * it also must provide cbegin() and cend().
+   *
+   * \tparam Reference STL reference provided by the container.
+   * 
+   *
+   * \tparam FunctionMap
+   *
+   * \sa Mdt::ItemModel::AbstractTableModel
+   * \sa https://doc.qt.io/qt-6/qabstractitemmodel.html
+   * \sa https://doc.qt.io/qt-6/qmodelindex.html
+   */
+  template<
+    typename Container,
+    typename SizeType = typename Container::size_type,
+    typename ValueType = typename Container::value_type,
+    typename ConstIterator = typename Container::const_iterator,
+    typename Reference = typename Container::reference,
+    typename FunctionMap = StlContiguousContainerFunctionMap<Container>
+  >
+  struct StlContainerAdapter
+  {
+    
+    static_assert( !std::is_void_v<ValueType> );
+
+    /*! \brief STL size_type
+     */
+    using size_type = SizeType;
+
+    /*! \brief STL const_reference
+     */
+    using reference = Reference;
+
+    /*! \brief STL const_reference
+     */
+    using const_reference = const ValueType &;
+
+    /*! \brief STL const_iterator
+     */
+    using const_iterator = ConstIterator;
+
     // using const_reference = typename Container::const_reference;
 
+    /*! \brief Get the count of rows for the model
+     *
+     * \pre The current size of the container must be convertible to int
+     */
     int rowCount() const
     {
+      /// \todo use size_type
       return FunctionMap::size(mContainer);
       // return std::invoke(FunctionMap::GetSize, mContainer);
       // return std::invoke(FunctionMap::SizeFunction, mContainer);
     }
 
+    /*! \brief Get the element at given row
+     *
+     * \pre \a row must be in range ( 0 >= \a row < rowCount() )
+     */
     const_reference atRow(int row) const noexcept
     {
+      /// \todo use size_type
     }
 
-    void atRowMutable(int row) noexcept
+    /*! \brief Access the element at given row for mutation
+     *
+     * \pre the reference type must be valid.
+     * \pre \a row must be in range ( 0 >= \a row < rowCount() )
+     */
+    reference atRowMutable(int row) noexcept
     {
+      static_assert( !std::is_void_v<reference> );
+
+      /// \todo use size_type
+      
+      return mContainer[row];
     }
 
+    /*! \brief Get the row that satisfies given predicate
+     *
+     * Returns the row if an element was found,
+     * otherwise a value < 0
+     *
+     * If the container does not provide const_iterator,
+     * a value < 0 is always returned.
+     *
+     * \todo Maybe better in a function map ? (!)
+     *
+     * \param pred unary predicate which returns ​true for the required element
+     * \sa https://en.cppreference.com/w/cpp/algorithm/find
+     */
     template<typename UnaryPred>
     int findRowOf(UnaryPred pred) const
     {
-      /// todo check provides iterator
+      if constexpr( !std::is_void_v<const_iterator> ){
+        const auto it = mContainer.cbegin();
+        
+      }
+      return -1;
     }
 
     /// get data
@@ -158,6 +295,15 @@ using SharedTestContainerAdapter = SharedStlContiguousContainerAdapter< std::vec
   };
 
   // using MyListFunctionMap = Xy_FunctionMap<MyList>;
+
+  struct MyListTypeMap
+  {
+    using size_type = size_t;
+    using value_type = MyItem;
+    // using reference = typename Container::reference;
+    // using const_reference = const value_type &;
+    // using const_iterator = typename Container::const_iterator;
+  };
 
   struct MyListFunctionMap
   {
@@ -193,12 +339,17 @@ using SharedTestContainerAdapter = SharedStlContiguousContainerAdapter< std::vec
       return mList.findRowOf(pred);
     }
 
+    // MyItem & sandboxMutableData(int row)
+    // {
+    //   // return mList.atRowMutable(row);
+    // }
+
     // bool insert()
     // {
     //   return mList.insert();
     // }
 
-    Adapter<MyList, MyListFunctionMap> mList;
+    StlContainerAdapter<MyList, size_t, MyItem, void, void, MyListFunctionMap> mList;
   };
 
 

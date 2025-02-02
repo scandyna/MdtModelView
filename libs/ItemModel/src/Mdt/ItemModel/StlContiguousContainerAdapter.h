@@ -10,61 +10,210 @@
 #ifndef MDT_ITEM_MODEL_STL_CONTIGUOUS_CONTAINER_ADAPTER_H
 #define MDT_ITEM_MODEL_STL_CONTIGUOUS_CONTAINER_ADAPTER_H
 
-// #include "mdt_itemmodel_export.h"
+#include <Mdt/Numeric/Limits.h>
+#include <Mdt/Numeric/BasicConversion.h>
+#include <cassert>
 
 namespace Mdt{ namespace ItemModel{
 
   /*! \brief Adapter to use STL contiguous containers with Qt item models
    *
-   * \todo STL adapters holds the container. This is more like a view. No! View are read only
-   * For lifetime issues, we should reference the container with a shared_ptr
-   * We should be able to construct autonome ou passer un existant.
-   *
    * In Qt model/view, row acces is int index based.
    * In the STL containers, index is std::size_t or iterator based.
    *
+   * \todo Discuss default constructed:
+   * - Should it exist in adapter ? Yes
+   * - Should it be imposed ?
+   * - For the shared version, should it instanciate an empty container, or be a nullptr ??
+   *   For the nullptr version, noexcept + not imposes default constructible + no CPU waste
+   *   But, should be able to construct the container on insert (?)
+   *
+   * \todo What about read only containers ?
+   * We should not impose to be mutable.
+   *
+   * \todo What about resizable containers ?
+   * We should not impose to provide insert / erase
+   *
+   * \note The name StlContiguousContainerAdapter requires all the std::vector functions ?
+   *
+   * Note this:
+   * \code
+   * bool insertXXX(...)
+   * {
+   *   if constexpr(CanInsert){ // OR SupportsInsert - To be coherent with AbstractTableModel
+   *     mContainer.insert(...);
+   *     return true;
+   *   }
+   *   return false;
+   * }
+   * \endcode
+   *
    * \todo Put usage example
+   *
+   * \section Mdt_ItemModel_StlContiguousContainerAdapter_ReadOnlyContainer Read only container
+   *
+   * Imagine we implement a serial port settings editor.
+   * One of the settings is the interface.
+   * Some serial port adapters supports not only RS-232, but also RS-485 and others.
+   * \sa https://www.moxa.com/en/products/industrial-edge-connectivity/usb-to-serial-converters-usb-hubs/usb-to-serial-converters/uport-1200-1400-1600-series
+   *
+   * |Parameter value| Interface |
+   * |:-------------:|:---------:|
+   * |  0x00         | RS-232    |
+   * |  0x01         | RS-485 2W |
+   * |  0x02         | RS-422    |
+   * |  0x03         | RS-485 4W |
+   *
+   * We present the list of available interfaces in a QComboBox.
+   * The user see the names, like RS-232 .
+   *
+   * When we get the setting from the system, or from a preset file,
+   * we also have to set the index in the combobox that represents the parameter value.
+   *
+   * \code
+   * class InterfaceList
+   * {
+   *  public:
+   *
+   *   using size_type = std::vector<Interface>::size_type;
+   *   using const_iterator = std::vector<Interface>::const_iterator;
+   *
+   *   // By default, only 1 interface is available: RS-232
+   *   explicit
+   *   InterfaceList();
+   *
+   *   size_type size() const noexcept;
+   *
+   *   const Interface & interfaceAt(size_type index) const noexcept;
+   *
+   *   const_iterator findPositionOfParameterValue(unsigned int value) const noexcept;
+   *
+   *  private:
+   *
+   *   std::vector<Interface> mList;
+   * };
+   * \endcode
+   *
+   * In this example, we choose to have our own API.
+   * To conform to the StlContiguousContainerAdapter requirements,
+   * we make a separate adapter. This reduces coupling.
+   * We also could have choose to adapt or add reuired methods to be directly usable with the StlContiguousContainerAdapter.
+   *
+   * \todo remind: find() uses iterators.
+   * If we want this, we have to provide iterators in the domain object.
+   *
+   * \code
+   * class InterfaceListTableModelAdapter
+   * {
+   *  public:
+   *
+   *   using size_type = InterfaceList::size_type;
+   *   using const_iterator = InterfaceList::const_iterator;
+   *   using const_reference = const Interface &;
+   *
+   *   InterfaceListTableModelAdapter() = default;
+   *
+   *   size_type size() const noexcept
+   *   {
+   *     return mList.size();
+   *   };
+   *
+   *   const Interface & at(size_type index) const noexcept
+   *   {
+   *     return mList.interfaceAt(index);
+   *   }
+   *
+   *   findXXXX() ?????
+   *
+   *  private:
+   *
+   *   InterfaceList mList;
+   * };
+   * \endcode
+   *
+   * \code
+   * class InterfaceListTableModel : QAbstractTableModel
+   * {
+   *  public:
+   *
+   *   // Constructor and othet methods omitted here
+   *
+   *   int rowCount( const QModelIndex &parent = QModelIndex() ) const
+   *   {
+   *     // parent checking omitted here
+   *     return mList.rowCount();
+   *   }
+   *
+   *   QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const
+   *   {
+   *     // index + role checking omitted here
+   *     switch( index.column() ){
+   *       case 0:
+   *         return mList.atRow( index.row() ).name();
+   *       case 1:
+   *         return mList.atRow( index.row() ).parameterValue(); // HEX formatting omitted here
+   *     }
+   *
+   *     return QVariant();
+   *   }
+   *
+   *   int findRowOfParameterValue(unsigned int value) const noexcept
+   *   {
+   *     // Solution 1
+   *     // Domain container provides a find() method and exposes const_iterator anyway
+   *     const auto it = mList.container().findPositionOfParameterValue(value);
+   *     return mList.rowFromPosition(it);
+   *
+   *     // Solution 2
+   *     // Domain container provides an index based find() method
+   *     const auto index = mList.container().findIndexOfParameterValue(value);
+   *     return mList.rowFromIndex(index);
+   *
+   *     // Solution 3
+   *     // Domain container does not provide a find() method - discouraged
+   *     // Domain container has to expose const_iterator, cbegin() and cend()
+   *     const auto pred = [value](const Interface & interface) -> bool
+   *     {
+   *       return interface.parameterValue() == value;
+   *     };
+   *     return mList.findRowOf(pred);
+   *
+   *     // Solution 4 - const_iterator based
+   *     return mList.findRowOf(&InterfaceList::findPositionOfParameterValue(), value);
+   *
+   *     // Solution 5 - index based
+   *     return mList.findRowOf(&InterfaceList::findIndexOfParameterValue(), value);
+   *   }
+   *
+   *  private:
+   *
+   *   Mdt::ItemModel::StlContiguousContainerAdapter<InterfaceListTableModelAdapter> mList;
+   * };
+   * \endcode
+   *
+   * \todo put findRowOfParameterValue() solution 3-5 to the exploratory / rationale section
+   *
+   * Notice that in the %data() method, we don't have to care about int to size_type conversion.
+   * This is done by StlContiguousContainerAdapter.
    *
    * \code
    * class MyTableModel : QAbstractTableModel
    * {
    *  public:
    *
-   *   void setContainer(shared_ptr<MyContainer> container)
-   *   {
-   *     mContainer = ?
-   *   }
    *
    *  private:
    *
    *   StlContiguousContainerAdapter<MyContainer> mContainer;
-   *   // OR
-   *   StlContiguousContainerAdapter< std::shared_ptr<MyContainer> > mContainer;
-   *   // Will not work, bacause shared_ptr is the wrong interface
-   *   // OR
-   *   std::shared_ptr< StlContiguousContainerAdapter<MyContainer> > mContainer
-   * };
-   * \endcode
-   *
-   * \code
-   * class SharedStlContiguousContainerAdapter
-   * {
-   *  public:
-   *
-   *   setContainer(shared_ptr<MyContainer> container)
-   *   {
-   *     mContainer = container;
-   *   }
-   *
-   *  private:
-   *
-   *   shared_ptr<Container> mContainer;
    * };
    * \endcode
    *
    * There are cases where we want to present a collection of elements,
    * based on a STL container, like std::vector,
    * by providing a Qt item model based access model.
+   *
+   * \note This adapter owns the underlaying container.
+   * If the container should be shared, use SharedStlContiguousContainerAdapter.
    *
    * The first problem is the conversion between the container size type
    * and the int based indexing.
@@ -125,19 +274,46 @@ namespace Mdt{ namespace ItemModel{
    * is out of scope of this adapter.
    * See AbstractTableModel for that.
    *
+   * \sa SharedStlContiguousContainerAdapter
    * \sa https://doc.qt.io/qt-6/qabstractitemmodel.html
    * \sa https://doc.qt.io/qt-6/qmodelindex.html
    * \sa https://en.cppreference.com/w/cpp/named_req/ContiguousContainer
    */
+  template<typename Container>
   class StlContiguousContainerAdapter
   {
    public:
 
-    
+    using size_type = typename Container::size_type;
+    using const_reference = typename Container::const_reference;
+
+    /*! \brief Construct an empty container
+     */
+    explicit
+    StlContiguousContainerAdapter() noexcept = default;
+
+    /*! \brief Get the count of elements
+     */
+    int size() const noexcept
+    {
+      assert( Mdt::Numeric::int_canHoldValueOf_size_t( mContainer.size() ) );
+
+      return Mdt::Numeric::int_from_size_t( mContainer.size() );
+    }
+
+    // bool isEmpty()
+
+    /*! \brief
+     *
+     * \todo preconditions
+     */
+    const_reference at(int index) const
+    {
+    }
 
    private:
 
-    
+    Container mContainer;
   };
 
 }} // namespace Mdt{ namespace ItemModel{

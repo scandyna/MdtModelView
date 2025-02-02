@@ -181,32 +181,29 @@ using SharedTestContainerAdapter = SharedStlContiguousContainerAdapter< std::vec
    */
   template<
     typename Container,
-    typename SizeType = typename Container::size_type,
-    typename ValueType = typename Container::value_type,
-    typename ConstIterator = typename Container::const_iterator,
-    typename Reference = typename Container::reference,
+    typename TypeMap,
     typename FunctionMap = StlContiguousContainerFunctionMap<Container>
   >
   struct StlContainerAdapter
   {
     
-    static_assert( !std::is_void_v<ValueType> );
+    static_assert( !std::is_void_v<typename TypeMap::value_type> );
 
     /*! \brief STL size_type
      */
-    using size_type = SizeType;
+    using size_type = typename TypeMap::size_type;
 
     /*! \brief STL const_reference
      */
-    using reference = Reference;
+    using reference = typename TypeMap::reference;
 
     /*! \brief STL const_reference
      */
-    using const_reference = const ValueType &;
+    using const_reference = const typename TypeMap::value_type &;
 
     /*! \brief STL const_iterator
      */
-    using const_iterator = ConstIterator;
+    using const_iterator = typename TypeMap::const_iterator;
 
     // using const_reference = typename Container::const_reference;
 
@@ -268,6 +265,13 @@ using SharedTestContainerAdapter = SharedStlContiguousContainerAdapter< std::vec
       return -1;
     }
 
+    /// \todo See std::function() interface
+    template<typename Function>
+    int findRowOf() const
+    {
+      
+    }
+
     /// get data
     bool insert()
     {
@@ -292,6 +296,26 @@ using SharedTestContainerAdapter = SharedStlContiguousContainerAdapter< std::vec
     {
       return 25;
     }
+
+    template<typename UnaryPred>
+    const_iterator findItem(UnaryPred pred) const noexcept
+    {
+    }
+
+    const_iterator findItemWithId(int id) const noexcept
+    {
+      const auto pred = [id](const MyItem & item){
+        return isRequestedItem(item, id);
+      };
+      return findItem(pred);
+    }
+
+    static
+    bool isRequestedItem(const MyItem & item, int id) noexcept
+    {
+    }
+    
+    std::vector<MyItem> mList;
   };
 
   // using MyListFunctionMap = Xy_FunctionMap<MyList>;
@@ -300,9 +324,9 @@ using SharedTestContainerAdapter = SharedStlContiguousContainerAdapter< std::vec
   {
     using size_type = size_t;
     using value_type = MyItem;
-    // using reference = typename Container::reference;
+    using reference = void;
     // using const_reference = const value_type &;
-    // using const_iterator = typename Container::const_iterator;
+    using const_iterator = void;
   };
 
   struct MyListFunctionMap
@@ -320,6 +344,18 @@ using SharedTestContainerAdapter = SharedStlContiguousContainerAdapter< std::vec
       return list.getSizeCustom();
     }
 
+    template<typename UnaryPred>
+    size_t findIndexOf(UnaryPred pred) const
+    {
+      /// \todo Here some helper to convert iterator difference to size_t ?
+    }
+
+    static
+    template<typename UnaryPred>
+    const_iterator findIf(UnaryPred pred, const MyList & list)
+    {
+      return list.findItem(pred);
+    }
 
     // using SizeFunction = MyList::getSizeCustom;
   };
@@ -331,10 +367,10 @@ using SharedTestContainerAdapter = SharedStlContiguousContainerAdapter< std::vec
       return mList.rowCount();
     }
 
-    int findRowOfName(const QString & name) const noexcept
+    int findRowOfId(int id) const noexcept
     {
-      const auto pred = [&name](const MyItem & item) -> bool {
-        return item.name == name;
+      const auto pred = [id](const MyItem & item) -> bool {
+        return MyList::isRequestedItem(item, id);
       };
       return mList.findRowOf(pred);
     }
@@ -349,7 +385,7 @@ using SharedTestContainerAdapter = SharedStlContiguousContainerAdapter< std::vec
     //   return mList.insert();
     // }
 
-    StlContainerAdapter<MyList, size_t, MyItem, void, void, MyListFunctionMap> mList;
+    StlContainerAdapter<MyList, MyListTypeMap, MyListFunctionMap> mList;
   };
 
 

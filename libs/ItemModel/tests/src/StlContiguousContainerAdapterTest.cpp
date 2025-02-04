@@ -15,6 +15,8 @@
 
 #include "Mdt/ItemModel/SharedStlContiguousContainerAdapter.h"
 
+#include "Mdt/ItemModel/StlHelpers.h"
+
 #include <functional>
 #include <type_traits>
 
@@ -66,62 +68,20 @@ using SharedTestContainerAdapter = SharedStlContiguousContainerAdapter< std::vec
 
   };
 
-    /*! \brief STL ContiguousContainer function map for STL adapters
-     *
-     * \todo Maybe inheritance like iterators ?
-     *
-     * \sa https://en.cppreference.com/w/cpp/named_req/ContiguousContainer
-     */
-    template<typename Container>
-    struct StlContiguousContainerFunctionMap
-    {
-      /*! \brief
-       *
-       * \todo propose a indexOf() based on find_if()
-       */
-      
-      /// \todo below seems wrong
-      
-      /*! \brief STL const_iterator
-       */
-      using const_iterator = typename Container::const_iterator;
-
-      /*! \brief Check if const_iterator is provided
-       *
-       * Returns true,
-       * because const_iterator, cbegin() and cend() are provided
-       * by an STL conform ContiguousContainer .
-       */
-      static
-      constexpr
-      bool providesConstIterator() noexcept
-      {
-        return true;
-      }
-
-      /*! \brief Check if insert() is supported
-       *
-       * Returns true
-       */
-      static
-      constexpr
-      bool supportsInsert() noexcept
-      {
-        return true;
-      }
-
-    };
-
   /*! \brief
    *
    * \todo Maybe StlContiguousContainerTypeMap
    */
   template<typename Container>
-  struct StlContainerTypeMap
+  struct StlContiguousContainerTypeMap
   {
     /*! \brief STL size_type
      */
     using size_type = typename Container::size_type;
+
+    /*! \brief STL difference_type
+     */
+    using difference_type = typename Container::difference_type;
 
     /*! \brief STL value_type
      */
@@ -140,6 +100,114 @@ using SharedTestContainerAdapter = SharedStlContiguousContainerAdapter< std::vec
     /*! \brief STL const_iterator
      */
     using const_iterator = typename Container::const_iterator;
+  };
+
+  /*! \brief STL read only ContiguousContainer function map for STL adapters
+   *
+   * This function map has the minimal requirements to provide read-only access.
+   *
+   * \todo brings no value.
+   */
+  template< typename Container>
+  struct StlReadOnlyContiguousContainerFunctionMap
+  {
+    /*! \brief STL size_type
+     */
+    using size_type = typename Container::size_type;
+
+  };
+
+  /*! \brief STL ContiguousContainer function map for STL adapters
+   *
+   * \todo Can we relax to SequenceContainer ?
+   * - https://en.cppreference.com/w/cpp/named_req/SequenceContainer
+   * - https://en.cppreference.com/w/cpp/named_req/ContiguousContainer
+   *
+   * \todo Maybe TypeMap not required ?
+   *
+   * \todo Maybe inheritance like iterators ?
+   *
+   * \sa https://en.cppreference.com/w/cpp/named_req/ContiguousContainer
+   */
+  template< typename Container, typename TypeMap = StlContiguousContainerTypeMap<Container> >
+  struct StlContiguousContainerFunctionMap
+  {
+    /*! \brief STL size_type
+     */
+    using size_type = typename TypeMap::size_type;
+
+    /*! \brief STL difference_type
+     */
+    using difference_type = typename TypeMap::difference_type;
+
+    /*! \brief STL const_reference
+     */
+    using const_reference = typename TypeMap::const_reference;
+
+    /*! \brief STL const_iterator
+     */
+    using const_iterator = typename TypeMap::const_iterator;
+
+    /*! \brief Check if const_iterator is provided
+     *
+     * Returns true,
+     * because const_iterator, cbegin() and cend() are provided
+     * by an STL conform ContiguousContainer .
+     *
+     * \todo remove
+     */
+    static
+    constexpr
+    bool providesConstIterator() noexcept
+    {
+      return true;
+    }
+
+    /*! \brief Check if insert() is supported
+     *
+     * Returns true
+     */
+    static
+    constexpr
+    bool supportsInsert() noexcept
+    {
+      return true;
+    }
+
+    /*! \brief Check if erase() is supported
+     *
+     * Returns true
+     */
+    static
+    constexpr
+    bool supportsErase() noexcept
+    {
+      return true;
+    }
+
+    /*! \brief
+     */
+    static
+    const_iterator cbegin(const Container & container)
+    {
+      return container.cbegin();
+    }
+
+    /*! \brief insert function
+     */
+    static
+    void insert(Container & container, const_iterator pos, size_type count, const_reference value)
+    {
+      container.insert(pos, count, value);
+    }
+
+    /*! \brief Erase function
+     */
+    static
+    void erase(Container & container, const_iterator first, const_iterator last)
+    {
+      container.erase(first, last);
+    }
   };
 
   /*! \brief Adapter to use STL style containers with Qt item models
@@ -181,7 +249,7 @@ using SharedTestContainerAdapter = SharedStlContiguousContainerAdapter< std::vec
    */
   template<
     typename Container,
-    typename TypeMap,
+    typename TypeMap = StlContiguousContainerTypeMap<Container>, /// Maybe redoundant ??
     typename FunctionMap = StlContiguousContainerFunctionMap<Container>
   >
   struct StlContainerAdapter
@@ -242,41 +310,62 @@ using SharedTestContainerAdapter = SharedStlContiguousContainerAdapter< std::vec
       return mContainer[row];
     }
 
-    /*! \brief Get the row that satisfies given predicate
+    /*! \brief Access the container
      *
-     * Returns the row if an element was found,
-     * otherwise a value < 0
-     *
-     * If the container does not provide const_iterator,
-     * a value < 0 is always returned.
-     *
-     * \todo Maybe better in a function map ? (!)
-     *
-     * \param pred unary predicate which returns ​true for the required element
-     * \sa https://en.cppreference.com/w/cpp/algorithm/find
+     * Should only be used when required,
+     * like for find row functions.
      */
-    template<typename UnaryPred>
-    int findRowOf(UnaryPred pred) const
+    const Container & container() const noexcept
     {
-      if constexpr( !std::is_void_v<const_iterator> ){
-        const auto it = mContainer.cbegin();
-        
-      }
-      return -1;
+      return mContainer;
     }
 
-    /// \todo See std::function() interface
-    template<typename Function>
-    int findRowOf() const
+    /*! \brief Get the row corresponding to given position
+     *
+     * \pre \a pos must be of type of the container's const_iterator
+     */
+    template<typename Iterator>
+    int rowFromPosition(Iterator pos) const
     {
-      
+      static_assert( std::is_same_v<Iterator, const_iterator> );
+    }
+
+    // int rowFromPosition(typename std::enable_if_t<!std::is_void_v<const_iterator>, const_iterator>::type  pos) const
+    // {
+    // }
+
+    /*! \brief Get the row for given index
+     */
+    int rowFromIndex(size_type index) const
+    {
     }
 
     /// get data
-    bool insert()
+
+    /*! \brief Inserts count rows into the container before the given row
+     *
+     * \todo preconditions
+     */
+    bool insertRows(int row, int count, const_reference value)
     {
       if constexpr( FunctionMap::supportsInsert() ){
-        return FunctionMap::insert(mContainer);
+        /// calc iterator + difference + check + cast
+        const auto pos = const_iterator{};
+        /// \todo adapt and use insertToStlContainer()
+        FunctionMap::insert(mContainer);
+        return true;
+      }
+      return false;
+    }
+
+    /*! \brief Removes count rows starting with the given row
+     *
+     * \todo preconditions
+     */
+    bool removeRows(int row, int count)
+    {
+      if constexpr( FunctionMap::supportsErase() ){
+        /// \todo Adapt and use removeFromStlContainer()
       }
       return false;
     }
@@ -284,14 +373,329 @@ using SharedTestContainerAdapter = SharedStlContiguousContainerAdapter< std::vec
     Container mContainer;
   };
 
+
   struct MyItem
   {
     int id = 0;
     QString name;
   };
 
+  /** Read only example
+   *
+   */
+
+  struct MyReadOnlyList
+  {
+    using size_type = std::vector<MyItem>::size_type;
+
+    size_type getSizeCustom() const noexcept
+    {
+      return 25;
+    }
+
+    const MyItem & itemAt(size_type index) const noexcept
+    {
+    }
+  };
+
+  /**
+   * NOTE:
+   * - size() and atIndex() always required
+   * - size_type and const_reference always required
+   *
+   * - size_type has to be exposed by the container
+   *
+   * \todo Maybe create a CRTP based interface that forces implementing supportsInsert() etc.. ?
+   */
+  struct MyReadOnlyListTableModelAdapterFunctionMap
+  {
+    using size_type = MyReadOnlyList::size_type;
+    using const_reference = const MyItem &;
+
+    static
+    constexpr
+    bool supportsAtIndexMutable() noexcept
+    {
+      return false;
+    }
+
+    static
+    constexpr
+    bool supportsInsert() noexcept
+    {
+      return false;
+    }
+
+    static
+    constexpr
+    bool supportsErase() noexcept
+    {
+      return false;
+    }
+
+    static
+    size_type size(const MyReadOnlyList & list) noexcept
+    {
+      return list.getSizeCustom();
+    }
+
+    static
+    const_reference atIndex(const MyReadOnlyList & list, size_type index) noexcept
+    {
+      return list.itemAt(index);
+    }
+  };
+
+
+  /** Mutable example (NOT resizable)
+   */
+
+  struct MyMutableList
+  {
+    using size_type = std::vector<MyItem>::size_type;
+
+    size_type getSizeCustom() const noexcept
+    {
+      return 25;
+    }
+
+    const MyItem & itemAt(size_type index) const noexcept
+    {
+    }
+
+    MyItem & mutableItemAt(size_type index) noexcept
+    {
+    }
+  };
+
+  struct MyMutableListFunctionMap
+  {
+    using size_type = MyMutableList::size_type;
+    using const_reference = const MyItem &;
+    using reference = MyItem &;
+
+    static
+    constexpr
+    bool supportsAtIndexMutable() noexcept
+    {
+      return true;
+    }
+
+    static
+    constexpr
+    bool supportsInsert() noexcept
+    {
+      return false;
+    }
+
+    static
+    constexpr
+    bool supportsErase() noexcept
+    {
+      return false;
+    }
+
+    static
+    size_type size(const MyMutableList & list) noexcept
+    {
+      return list.getSizeCustom();
+    }
+
+    static
+    const_reference atIndex(const MyMutableList & list, size_type index) noexcept
+    {
+      return list.itemAt(index);
+    }
+
+    static
+    reference atIndexMutable(MyMutableList & list, size_type index) noexcept
+    {
+      return list.mutableItemAt(index);
+    }
+  };
+
+
+  /** Read only and resizable example
+   *
+   */
+
+  struct MyReadOnlyResizableList
+  {
+    using size_type = std::vector<MyItem>::size_type;
+    using const_iterator = std::vector<MyItem>::const_iterator;
+
+    size_type getSizeCustom() const noexcept
+    {
+      return 25;
+    }
+
+    const MyItem & itemAt(size_type index) const noexcept
+    {
+    }
+
+    void insert(const_iterator pos, size_type count, const MyItem & value)
+    {
+    }
+
+    void erase(const_iterator first, const_iterator last)
+    {
+    }
+  };
+
+  struct MyReadOnlyResizableListFunctionMap
+  {
+    using size_type = MyReadOnlyResizableList::size_type;
+    using const_reference = const MyItem &;
+    using const_iterator = MyReadOnlyResizableList::const_iterator;
+
+    static
+    constexpr
+    bool supportsAtIndexMutable() noexcept
+    {
+      return false;
+    }
+
+    static
+    constexpr
+    bool supportsInsert() noexcept
+    {
+      return true;
+    }
+
+    static
+    constexpr
+    bool supportsErase() noexcept
+    {
+      return true;
+    }
+
+    static
+    size_type size(const MyReadOnlyResizableList & list) noexcept
+    {
+      return list.getSizeCustom();
+    }
+
+    static
+    const_reference atIndex(const MyReadOnlyResizableList & list, size_type index) noexcept
+    {
+      return list.itemAt(index);
+    }
+
+    /// \todo Very common: only support push_back
+
+    static
+    void insert(MyReadOnlyResizableList & list, const_iterator pos, size_type count, const_reference value)
+    {
+      list.insert(pos, count, value);
+    }
+
+    /*! \brief Erase function
+     */
+    static
+    void erase(MyReadOnlyResizableList & list, const_iterator first, const_iterator last)
+    {
+      list.erase(first, last);
+    }
+  };
+
+
+  /** Mutable and resizable example
+   */
+
+  struct MyMutableResizableList
+  {
+    using size_type = std::vector<MyItem>::size_type;
+    using const_iterator = std::vector<MyItem>::const_iterator;
+
+    size_type getSizeCustom() const noexcept
+    {
+      return 25;
+    }
+
+    const MyItem & itemAt(size_type index) const noexcept
+    {
+    }
+
+    MyItem & mutableItemAt(size_type index) noexcept
+    {
+    }
+
+    void insert(const_iterator pos, size_type count, const MyItem & value)
+    {
+    }
+
+    void erase(const_iterator first, const_iterator last)
+    {
+    }
+  };
+
+  struct MyMutableResizableListTableModelAdapterFunctionMap
+  {
+    using size_type = MyMutableResizableList::size_type;
+    using reference = MyItem &;
+    using const_reference = const MyItem &;
+    using const_iterator = MyMutableResizableList::const_iterator;
+
+    static
+    constexpr
+    bool supportsAtIndexMutable() noexcept
+    {
+      return true;
+    }
+
+    static
+    constexpr
+    bool supportsInsert() noexcept
+    {
+      return true;
+    }
+
+    static
+    constexpr
+    bool supportsErase() noexcept
+    {
+      return true;
+    }
+
+    static
+    size_type size(const MyMutableResizableList & list) noexcept
+    {
+      return list.getSizeCustom();
+    }
+
+    static
+    const_reference atIndex(const MyMutableResizableList & list, size_type index) noexcept
+    {
+      return list.itemAt(index);
+    }
+
+    static
+    reference atIndexMutable(MyMutableResizableList & list, size_type index) noexcept
+    {
+      return list.mutableItemAt(index);
+    }
+
+    static
+    void insert(MyMutableResizableList & list, const_iterator pos, size_type count, const_reference value)
+    {
+      list.insert(pos, count, value);
+    }
+
+    /*! \brief Erase function
+     */
+    static
+    void erase(MyMutableResizableList & list, const_iterator first, const_iterator last)
+    {
+      list.erase(first, last);
+    }
+  };
+
+
+
   struct MyList
   {
+    using const_iterator = std::vector<MyItem>::const_iterator;
+
     size_t getSizeCustom() const noexcept
     {
       return 25;
@@ -338,24 +742,25 @@ using SharedTestContainerAdapter = SharedStlContiguousContainerAdapter< std::vec
       return false;
     }
 
+    /// \todo use size_type
     static
     size_t size(const MyList & list)
     {
       return list.getSizeCustom();
     }
 
-    template<typename UnaryPred>
-    size_t findIndexOf(UnaryPred pred) const
-    {
-      /// \todo Here some helper to convert iterator difference to size_t ?
-    }
+    // template<typename UnaryPred>
+    // size_t findIndexOf(UnaryPred pred) const
+    // {
+    //   /// \todo Here some helper to convert iterator difference to size_t ?
+    // }
 
-    static
-    template<typename UnaryPred>
-    const_iterator findIf(UnaryPred pred, const MyList & list)
-    {
-      return list.findItem(pred);
-    }
+    // static
+    // template<typename UnaryPred>
+    // const_iterator findIf(UnaryPred pred, const MyList & list)
+    // {
+    //   return list.findItem(pred);
+    // }
 
     // using SizeFunction = MyList::getSizeCustom;
   };
@@ -369,10 +774,20 @@ using SharedTestContainerAdapter = SharedStlContiguousContainerAdapter< std::vec
 
     int findRowOfId(int id) const noexcept
     {
-      const auto pred = [id](const MyItem & item) -> bool {
-        return MyList::isRequestedItem(item, id);
-      };
-      return mList.findRowOf(pred);
+      const auto it = mList.container().findItemWithId(id);
+      return mList.rowFromPosition(it);
+
+      // const auto pred = [id](const MyItem & item) -> bool {
+      //   return MyList::isRequestedItem(item, id);
+      // };
+      // return mList.findRowOf(pred);
+    }
+
+    bool insertRows(int row, int count)
+    {
+      // beginInsertRows() omitted
+      return mList.insertRows( row, count, MyItem() );
+      // endInsertRows() omitted
     }
 
     // MyItem & sandboxMutableData(int row)

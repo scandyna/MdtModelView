@@ -691,6 +691,130 @@ using SharedTestContainerAdapter = SharedStlContiguousContainerAdapter< std::vec
   };
 
 
+  /** Read only example with iterator based find
+   */
+
+  struct MyReadOnlyWithIteratorFindList
+  {
+    using size_type = std::vector<MyItem>::size_type;
+    using const_iterator = std::vector<MyItem>::const_iterator;
+
+    size_type getSizeCustom() const noexcept
+    {
+      return 25;
+    }
+
+    const MyItem & itemAt(size_type index) const noexcept
+    {
+    }
+
+    const_iterator findItemWithId(int id) const noexcept
+    {
+    }
+  };
+
+  struct MyReadOnlyWithIteratorFindListTableModelAdapterFunctionMap
+  {
+    using size_type = MyReadOnlyWithIteratorFindList::size_type;
+    using const_reference = const MyItem &;
+    using const_iterator = MyReadOnlyWithIteratorFindList::const_iterator;
+
+    static
+    constexpr
+    bool supportsAtIndexMutable() noexcept
+    {
+      return false;
+    }
+
+    static
+    constexpr
+    bool supportsInsert() noexcept
+    {
+      return false;
+    }
+
+    static
+    constexpr
+    bool supportsErase() noexcept
+    {
+      return false;
+    }
+
+    static
+    size_type size(const MyReadOnlyWithIteratorFindList & list) noexcept
+    {
+      return list.getSizeCustom();
+    }
+
+    static
+    const_reference atIndex(const MyReadOnlyWithIteratorFindList & list, size_type index) noexcept
+    {
+      return list.itemAt(index);
+    }
+  };
+
+
+  /** Read only example with index based find
+   */
+
+  struct MyReadOnlyWithIndexFindList
+  {
+    using size_type = std::vector<MyItem>::size_type;
+
+    size_type getSizeCustom() const noexcept
+    {
+      return 25;
+    }
+
+    const MyItem & itemAt(size_type index) const noexcept
+    {
+    }
+
+    size_type findIndexOfItemWithId(int id) const noexcept
+    {
+    }
+  };
+
+  struct MyReadOnlyWithIndexFindListTableModelAdapterFunctionMap
+  {
+    using size_type = MyReadOnlyWithIndexFindList::size_type;
+    using const_reference = const MyItem &;
+
+    static
+    constexpr
+    bool supportsAtIndexMutable() noexcept
+    {
+      return false;
+    }
+
+    static
+    constexpr
+    bool supportsInsert() noexcept
+    {
+      return false;
+    }
+
+    static
+    constexpr
+    bool supportsErase() noexcept
+    {
+      return false;
+    }
+
+    static
+    size_type size(const MyReadOnlyWithIndexFindList & list) noexcept
+    {
+      return list.getSizeCustom();
+    }
+
+    static
+    const_reference atIndex(const MyReadOnlyWithIndexFindList & list, size_type index) noexcept
+    {
+      return list.itemAt(index);
+    }
+  };
+
+
 
   struct MyList
   {
@@ -814,4 +938,14 @@ TEMPLATE_TEST_CASE("default_constructed", "", TestContainerAdapter, SharedTestCo
   TestType container;
 
   CHECK( container.size() == 0 );
+}
+
+TEST_CASE("rowFromPosition")
+{
+  REQUIRE(false);
+}
+
+TEST_CASE("rowFromIndex")
+{
+  REQUIRE(false);
 }

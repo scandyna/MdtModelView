@@ -20,6 +20,8 @@
 #include <functional>
 #include <type_traits>
 
+#include <QVariant>
+
 using namespace Mdt::ItemModel;
 
 using TestContainerAdapter = StlContiguousContainerAdapter< std::vector<int> >;
@@ -210,6 +212,146 @@ using SharedTestContainerAdapter = SharedStlContiguousContainerAdapter< std::vec
     }
   };
 
+
+/*
+ * Solution: Use std::void_t for Detection
+ *
+ * You can use template metaprogramming to check whether FunctionMap::const_reference exists and define const_reference only if it does.
+ * 
+ */
+// #include <type_traits>
+
+// Primary template: Assume `const_reference` doesn't exist.
+// template <typename, typename = void>
+// struct has_const_reference : std::false_type {};
+// 
+// // Specialization: If `FunctionMap::const_reference` exists, mark as `true_type`.
+// template <typename T>
+// struct has_const_reference<T, std::void_t<typename T::const_reference>> : std::true_type {};
+// 
+// // StlContainerAdapter definition
+// template<typename Container, typename FunctionMap, bool = has_const_reference<FunctionMap>::value>
+// struct StlContainerAdapter {};
+// 
+// // Specialization that defines `const_reference` only if it exists in `FunctionMap`
+// template<typename Container, typename FunctionMap>
+// struct StlContainerAdapter<Container, FunctionMap, true> {
+//     using const_reference = typename FunctionMap::const_reference;
+// };
+// 
+// int main() {
+//     struct WithConstRef { using const_reference = int&; };
+//     struct WithoutConstRef {};
+// 
+//     StlContainerAdapter<int, WithConstRef> adapter1;  // ✅ OK
+//     // StlContainerAdapter<int, WithoutConstRef> adapter2; // ❌ Error: No matching specialization
+// 
+//     return 0;
+// }
+
+/// \sa https://en.cppreference.com/w/cpp/experimental/is_detected
+
+/*
+ * 🛠 Explanation:
+ *
+ * has_const_reference<T>: A helper struct that detects if T::const_reference exists.
+ * Partial Specialization: We only define const_reference in StlContainerAdapter when FunctionMap::const_reference exists.
+ * Prevents Compilation Errors: If FunctionMap::const_reference doesn’t exist, the specialization isn't selected.
+ */
+
+/*
+Alternative: Fallback to void or Default Type
+
+If you want const_reference to default to void when missing:
+*/
+// template <typename FunctionMap, typename = void>
+// struct GetConstReference {
+//     using type = void; // Default when `const_reference` doesn't exist
+// };
+// 
+// template <typename FunctionMap>
+// struct GetConstReference<FunctionMap, std::void_t<typename FunctionMap::const_reference>> {
+//     using type = typename FunctionMap::const_reference;
+// };
+// 
+// template<typename Container, typename FunctionMap>
+// struct StlContainerAdapter_2 {
+//     using const_reference = typename GetConstReference<FunctionMap>::type;
+// };
+
+/*
+ * This version always compiles, but const_reference will be void if it doesn't exist in FunctionMap.
+ */
+
+/** \todo For member functions, try to explore decltype( std::declval<T&>().func() )
+ */
+
+namespace Impl{
+
+  template<typename, typename = void>
+  struct reference_TypeMemberOr_void
+  {
+    using type = void;
+  };
+
+  template<typename T>
+  struct reference_TypeMemberOr_void< T, std::void_t<typename T::reference> >
+  {
+    using type = typename T::reference;
+  };
+
+} // namespace Impl{
+
+
+struct MyFunctionMap
+{
+};
+
+struct MyFunctionMapWithReference
+{
+  using reference = int &;
+};
+
+template<typename FunctionMap>
+struct Adapter
+{
+  using reference = typename Impl::reference_TypeMemberOr_void<FunctionMap>::type;
+
+  reference value() const
+  {
+  }
+};
+
+
+struct MyModel
+{
+  Adapter<MyFunctionMap> a;
+};
+
+struct MyModelWithReference
+{
+  Adapter<MyFunctionMapWithReference> a;
+
+  int & value() const
+  {
+    return a.value();
+  }
+};
+
+
+/**
+ * \sa https://en.cppreference.com/w/cpp/types/void_t
+ * \sa https://en.cppreference.com/w/cpp/types/integral_constant
+ */
+// primary template handles types that have no nested ::type member:
+template<typename, typename = void>
+struct has_type_member : std::false_type {};
+ 
+// specialization recognizes types that do have a nested ::type member:
+template<typename T>
+struct has_type_member<T, std::void_t<typename T::type>> : std::true_type {};
+
+
   /*! \brief Adapter to use STL style containers with Qt item models
    *
    * In Qt model/view, row acces is int index based.
@@ -218,7 +360,7 @@ using SharedTestContainerAdapter = SharedStlContiguousContainerAdapter< std::vec
    * A goal of this adapter is to help to convert between those types
    * in some checked way (contract programming based).
    *
-   * This adapter can be used containers that are domain specific,
+   * This adapter can be used with containers that are domain specific,
    * and that do not provide all the STL required interface.
    *
    * Goal is to avoid having to adapt the container itself
@@ -247,31 +389,30 @@ using SharedTestContainerAdapter = SharedStlContiguousContainerAdapter< std::vec
    * \sa https://doc.qt.io/qt-6/qabstractitemmodel.html
    * \sa https://doc.qt.io/qt-6/qmodelindex.html
    */
-  template<
-    typename Container,
-    typename TypeMap = StlContiguousContainerTypeMap<Container>, /// Maybe redoundant ??
-    typename FunctionMap = StlContiguousContainerFunctionMap<Container>
-  >
+  template<typename Container, typename FunctionMap>
   struct StlContainerAdapter
   {
-    
-    static_assert( !std::is_void_v<typename TypeMap::value_type> );
+    // static_assert( !std::is_void_v<typename TypeMap::value_type> );
 
     /*! \brief STL size_type
      */
-    using size_type = typename TypeMap::size_type;
+    using size_type = typename FunctionMap::size_type;
+
+    /*! \brief STL reference
+     *
+     * Will be FunctionMap::reference if \a FunctionMap defines it,
+     * otherwise void.
+     */
+    using reference = typename Impl::reference_TypeMemberOr_void<FunctionMap>::type;
+    // using reference = typename TypeMap::reference;
 
     /*! \brief STL const_reference
      */
-    using reference = typename TypeMap::reference;
-
-    /*! \brief STL const_reference
-     */
-    using const_reference = const typename TypeMap::value_type &;
+    using const_reference = typename FunctionMap::const_reference;
 
     /*! \brief STL const_iterator
      */
-    using const_iterator = typename TypeMap::const_iterator;
+    // using const_iterator = typename TypeMap::const_iterator;
 
     // using const_reference = typename Container::const_reference;
 
@@ -293,7 +434,8 @@ using SharedTestContainerAdapter = SharedStlContiguousContainerAdapter< std::vec
      */
     const_reference atRow(int row) const noexcept
     {
-      /// \todo use size_type
+      /// \todo handle to size_type conversion
+      return FunctionMap::atIndex(mContainer, row);
     }
 
     /*! \brief Access the element at given row for mutation
@@ -301,9 +443,10 @@ using SharedTestContainerAdapter = SharedStlContiguousContainerAdapter< std::vec
      * \pre the reference type must be valid.
      * \pre \a row must be in range ( 0 >= \a row < rowCount() )
      */
+    // template<typename ReferenceType>
     reference atRowMutable(int row) noexcept
     {
-      static_assert( !std::is_void_v<reference> );
+      static_assert( !std::is_void_v<reference>, "call StlContainerAdapter::atRowMutable() requires FunctionMap::reference to be defined" );
 
       /// \todo use size_type
       
@@ -327,7 +470,7 @@ using SharedTestContainerAdapter = SharedStlContiguousContainerAdapter< std::vec
     template<typename Iterator>
     int rowFromPosition(Iterator pos) const
     {
-      static_assert( std::is_same_v<Iterator, const_iterator> );
+      // static_assert( std::is_same_v<Iterator, const_iterator> );
     }
 
     // int rowFromPosition(typename std::enable_if_t<!std::is_void_v<const_iterator>, const_iterator>::type  pos) const
@@ -350,10 +493,10 @@ using SharedTestContainerAdapter = SharedStlContiguousContainerAdapter< std::vec
     {
       if constexpr( FunctionMap::supportsInsert() ){
         /// calc iterator + difference + check + cast
-        const auto pos = const_iterator{};
-        /// \todo adapt and use insertToStlContainer()
-        FunctionMap::insert(mContainer);
-        return true;
+        // const auto pos = const_iterator{};
+        // /// \todo adapt and use insertToStlContainer()
+        // FunctionMap::insert(mContainer);
+        // return true;
       }
       return false;
     }
@@ -412,12 +555,12 @@ using SharedTestContainerAdapter = SharedStlContiguousContainerAdapter< std::vec
     using size_type = MyReadOnlyList::size_type;
     using const_reference = const MyItem &;
 
-    static
-    constexpr
-    bool supportsAtIndexMutable() noexcept
-    {
-      return false;
-    }
+    // static
+    // constexpr
+    // bool supportsAtIndexMutable() noexcept
+    // {
+    //   return false;
+    // }
 
     static
     constexpr
@@ -444,6 +587,27 @@ using SharedTestContainerAdapter = SharedStlContiguousContainerAdapter< std::vec
     {
       return list.itemAt(index);
     }
+  };
+
+  struct MyReadOnlyListTableModel
+  {
+    int rowCount() const
+    {
+      return mList.rowCount();
+    }
+
+    QVariant data(int row, int column) const
+    {
+      switch(column){
+        case 0:
+          return mList.atRow(row).id;
+        case 1:
+          return mList.atRow(row).name;
+      }
+      return QVariant();
+    }
+
+    StlContainerAdapter<MyReadOnlyList, MyReadOnlyListTableModelAdapterFunctionMap> mList;
   };
 
 
@@ -474,12 +638,12 @@ using SharedTestContainerAdapter = SharedStlContiguousContainerAdapter< std::vec
     using const_reference = const MyItem &;
     using reference = MyItem &;
 
-    static
-    constexpr
-    bool supportsAtIndexMutable() noexcept
-    {
-      return true;
-    }
+    // static
+    // constexpr
+    // bool supportsAtIndexMutable() noexcept
+    // {
+    //   return true;
+    // }
 
     static
     constexpr
@@ -597,6 +761,44 @@ using SharedTestContainerAdapter = SharedStlContiguousContainerAdapter< std::vec
       list.erase(first, last);
     }
   };
+
+  // struct MyReadOnlyResizableListTableModel
+  // {
+  //   int rowCount() const
+  //   {
+  //     return mList.rowCount();
+  //   }
+  // 
+  //   int findRowOfId(int id) const noexcept
+  //   {
+  //     const auto it = mList.container().findItemWithId(id);
+  //     return mList.rowFromPosition(it);
+  // 
+  //     // const auto pred = [id](const MyItem & item) -> bool {
+  //     //   return MyList::isRequestedItem(item, id);
+  //     // };
+  //     // return mList.findRowOf(pred);
+  //   }
+  // 
+  //   bool insertRows(int row, int count)
+  //   {
+  //     // beginInsertRows() omitted
+  //     return mList.insertRows( row, count, MyItem() );
+  //     // endInsertRows() omitted
+  //   }
+  // 
+  //   // MyItem & sandboxMutableData(int row)
+  //   // {
+  //   //   // return mList.atRowMutable(row);
+  //   // }
+  // 
+  //   // bool insert()
+  //   // {
+  //   //   return mList.insert();
+  //   // }
+  // 
+  //   StlContainerAdapter<MyList, MyListTypeMap, MyListFunctionMap> mList;
+  // };
 
 
   /** Mutable and resizable example
@@ -812,119 +1014,6 @@ using SharedTestContainerAdapter = SharedStlContiguousContainerAdapter< std::vec
     {
       return list.itemAt(index);
     }
-  };
-
-
-
-  struct MyList
-  {
-    using const_iterator = std::vector<MyItem>::const_iterator;
-
-    size_t getSizeCustom() const noexcept
-    {
-      return 25;
-    }
-
-    template<typename UnaryPred>
-    const_iterator findItem(UnaryPred pred) const noexcept
-    {
-    }
-
-    const_iterator findItemWithId(int id) const noexcept
-    {
-      const auto pred = [id](const MyItem & item){
-        return isRequestedItem(item, id);
-      };
-      return findItem(pred);
-    }
-
-    static
-    bool isRequestedItem(const MyItem & item, int id) noexcept
-    {
-    }
-    
-    std::vector<MyItem> mList;
-  };
-
-  // using MyListFunctionMap = Xy_FunctionMap<MyList>;
-
-  struct MyListTypeMap
-  {
-    using size_type = size_t;
-    using value_type = MyItem;
-    using reference = void;
-    // using const_reference = const value_type &;
-    using const_iterator = void;
-  };
-
-  struct MyListFunctionMap
-  {
-    static
-    constexpr
-    bool supportsInsert() noexcept
-    {
-      return false;
-    }
-
-    /// \todo use size_type
-    static
-    size_t size(const MyList & list)
-    {
-      return list.getSizeCustom();
-    }
-
-    // template<typename UnaryPred>
-    // size_t findIndexOf(UnaryPred pred) const
-    // {
-    //   /// \todo Here some helper to convert iterator difference to size_t ?
-    // }
-
-    // static
-    // template<typename UnaryPred>
-    // const_iterator findIf(UnaryPred pred, const MyList & list)
-    // {
-    //   return list.findItem(pred);
-    // }
-
-    // using SizeFunction = MyList::getSizeCustom;
-  };
-
-  struct MyTableModel
-  {
-    int rowCount() const
-    {
-      return mList.rowCount();
-    }
-
-    int findRowOfId(int id) const noexcept
-    {
-      const auto it = mList.container().findItemWithId(id);
-      return mList.rowFromPosition(it);
-
-      // const auto pred = [id](const MyItem & item) -> bool {
-      //   return MyList::isRequestedItem(item, id);
-      // };
-      // return mList.findRowOf(pred);
-    }
-
-    bool insertRows(int row, int count)
-    {
-      // beginInsertRows() omitted
-      return mList.insertRows( row, count, MyItem() );
-      // endInsertRows() omitted
-    }
-
-    // MyItem & sandboxMutableData(int row)
-    // {
-    //   // return mList.atRowMutable(row);
-    // }
-
-    // bool insert()
-    // {
-    //   return mList.insert();
-    // }
-
-    StlContainerAdapter<MyList, MyListTypeMap, MyListFunctionMap> mList;
   };
 
 

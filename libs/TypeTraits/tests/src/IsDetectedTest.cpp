@@ -8,8 +8,8 @@
  ** or copy at http://www.boost.org/LICENSE_1_0.txt)
  **
  *****************************************************************************************/
-#include "Mdt/detected_or.h"
-#include "Mdt/is_detected.h"
+#include "Mdt/TypeTraits/detected_or.h"
+#include "Mdt/TypeTraits/is_detected.h"
 #include <utility>
 // #include "catch2/catch.hpp"
 
@@ -28,8 +28,8 @@ namespace Impl{
   template<typename Container>
   using has_insert_op = decltype( std::declval<Container>().insert( std::declval<int>(), std::declval<bool>() ) );
 
-  static_assert( !Mdt::is_detected_v<has_insert_op, NoInsert> );
-  static_assert( Mdt::is_detected_v<has_insert_op, WithInsert> );
+  static_assert( !Mdt::TypeTraits::is_detected_v<has_insert_op, NoInsert> );
+  static_assert( Mdt::TypeTraits::is_detected_v<has_insert_op, WithInsert> );
 
 } // namespace Impl{
 
@@ -38,7 +38,7 @@ template<typename Container>
 constexpr
 bool containerSupportsInsert()
 {
-  return Mdt::is_detected_v<Impl::has_insert_op, Container>;
+  return Mdt::TypeTraits::is_detected_v<Impl::has_insert_op, Container>;
 }
 
 static_assert( !containerSupportsInsert<NoInsert>() );
@@ -72,7 +72,7 @@ namespace Impl{
 /*! \brief
  */
 template<typename Container>
-using get_member_difference_type_or_void = Mdt::detected_or_t<void, Impl::get_member_difference_type_op, Container>;
+using get_member_difference_type_or_void = Mdt::TypeTraits::detected_or_t<void, Impl::get_member_difference_type_op, Container>;
 
 
 
@@ -117,5 +117,5 @@ using has_size = typename T::size_type;
 template<typename T>
 void doSomething(const T & t)
 {
-  Mdt::detected_or<short, has_size, T> v;
+  Mdt::TypeTraits::detected_or<short, has_size, T> v;
 }

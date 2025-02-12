@@ -8,13 +8,13 @@
  ** or copy at http://www.boost.org/LICENSE_1_0.txt)
  **
  *****************************************************************************************/
-#ifndef MDT_TYPE_TRAITS_DETAIL_DETECTOR_CUSTOM_H
-#define MDT_TYPE_TRAITS_DETAIL_DETECTOR_CUSTOM_H
+#ifndef MDT_TYPE_TRAITS_IMPL_IS_DETECED_CUSTOM_H
+#define MDT_TYPE_TRAITS_IMPL_IS_DETECED_CUSTOM_H
 
-namespace Mdt{ namespace TypeTraits{ namespace detail{
+namespace Mdt{ namespace TypeTraits{ namespace Impl{
 
   
 
-}}} // namespace Mdt{ namespace TypeTraits{ namespace detail{
+}}} // namespace Mdt{ namespace TypeTraits{ namespace Impl{
 
-#endif // #ifndef MDT_TYPE_TRAITS_DETAIL_DETECTOR_CUSTOM_H
+#endif // #ifndef MDT_TYPE_TRAITS_IMPL_IS_DETECED_CUSTOM_H

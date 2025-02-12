@@ -17,10 +17,10 @@
  #include "Mdt/TypeTraits/detail/detector_custom.h"
 #endif // #ifdef MDT_TYPE_TRAITS_COMPILER_SUPPORTS_DETECTION_IDIOM
 
-namespace Mdt{ namespace TypeTraits{ namespace detail{
+namespace Mdt{ namespace TypeTraits{ namespace Impl{
 
   
 
-}}} // namespace Mdt{ namespace TypeTraits{ namespace detail{
+}}} // namespace Mdt{ namespace TypeTraits{ namespace Impl{
 
 #endif // #ifndef MDT_TYPE_TRAITS_DETAIL_DETECTOR_H

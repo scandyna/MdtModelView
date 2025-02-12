@@ -8,13 +8,17 @@
  ** or copy at http://www.boost.org/LICENSE_1_0.txt)
  **
  *****************************************************************************************/
-#ifndef MDT_TYPE_TRAITS_DETECED_OR_CUSTOM_H
-#define MDT_TYPE_TRAITS_DETECED_OR_CUSTOM_H
+#ifndef MDT_TYPE_TRAITS_IMPL_DETAIL_IS_DETECED_STD_H
+#define MDT_TYPE_TRAITS_IMPL_DETAIL_IS_DETECED_STD_H
 
-namespace Mdt{
+#include <experimental/type_traits>
 
-  
+namespace Mdt{ namespace TypeTraits{ namespace Impl{
 
-} // namespace Mdt{
+  using std::experimental::is_detected;
+  using std::experimental::detected_t;
+  using std::experimental::is_detected_v;
 
-#endif // #ifndef MDT_TYPE_TRAITS_DETECED_OR_CUSTOM_H
+}}} // namespace Mdt{ namespace TypeTraits{ namespace Impl{
+
+#endif // #ifndef MDT_TYPE_TRAITS_IMPL_DETAIL_IS_DETECED_STD_H

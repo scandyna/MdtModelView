@@ -12,14 +12,16 @@
 #define MDT_TYPE_TRAITS_IS_DETECED_H
 
 #ifdef MDT_TYPE_TRAITS_COMPILER_SUPPORTS_DETECTION_IDIOM
- #include "Mdt/TypeTraits/detail/is_detected_std.h"
+ #include "Mdt/TypeTraits/Impl/is_detected_std.h"
 #else
- #include "Mdt/TypeTraits/detail/is_detected_custom.h"
+ #include "Mdt/TypeTraits/Impl/is_detected_custom.h"
 #endif // #ifdef MDT_TYPE_TRAITS_COMPILER_SUPPORTS_DETECTION_IDIOM
 
 namespace Mdt{
 
-  
+  using Mdt::TypeTraits::Impl::is_detected;
+  using Mdt::TypeTraits::Impl::detected_t;
+  using Mdt::TypeTraits::Impl::is_detected_v;
 
 } // namespace Mdt{
 

@@ -11,17 +11,16 @@
 #ifndef MDT_TYPE_TRAITS_DETECED_OR_H
 #define MDT_TYPE_TRAITS_DETECED_OR_H
 
-/// \todo detected_or_std ,  detected_or_custom should be in detail / Impl
-
 #ifdef MDT_TYPE_TRAITS_COMPILER_SUPPORTS_DETECTION_IDIOM
- #include "Mdt/TypeTraits/detected_or_std.h"
+ #include "Mdt/TypeTraits/Impl/detected_or_std.h"
 #else
- #include "Mdt/TypeTraits/detected_or_custom.h"
+ #include "Mdt/TypeTraits/Impl/detected_or_custom.h"
 #endif // #ifdef MDT_TYPE_TRAITS_COMPILER_SUPPORTS_DETECTION_IDIOM
 
 namespace Mdt{
 
-  
+  using Mdt::TypeTraits::Impl::detected_or;
+  using Mdt::TypeTraits::Impl::detected_or_t;
 
 } // namespace Mdt{
 

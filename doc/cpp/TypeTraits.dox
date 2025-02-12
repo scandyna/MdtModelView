@@ -1,0 +1,111 @@
+// SPDX-License-Identifier: BSL-1.0
+/****************************************************************************************
+ **
+ ** Copyright (C) 2025-2025 Philippe Steinmann.
+ **
+ ** Distributed under the Boost Software License,
+ ** Version 1.0. (See accompanying file LICENSE_1_0.txt
+ ** or copy at http://www.boost.org/LICENSE_1_0.txt)
+ **
+ *****************************************************************************************/
+
+/*! \page TypeTraits_dox TypeTraits library
+ *
+ * Provides some usefull helpers that are currently not in the C++ standard library.
+ * This can be usefull if using C++17, but maybe not with C++20 and aobove.
+ *
+ * This is a minimal library, avoiding to depend on Boost.TypeTraits.
+ *
+ * \sa https://www.boost.org/doc/libs/1_87_0/libs/type_traits/doc/html/index.html
+ *
+ * \section TypeTraits_DetectionIdiom Detection Idiom
+ *
+ * 
+ * \code
+ * #include <Mdt/detected_or.h>
+ * #include <type_traits>
+ *
+ * struct NoDifferenceType
+ * {
+ * };
+ *
+ * struct WithDifferenceType
+ * {
+ *   using difference_type = int;
+ * };
+ *
+ * template<typename Container>
+ * struct Adapter
+ * {
+ *   // Will be Container::difference_type if it defines it, otherwise void
+ *   using difference_type = ??
+ * };
+ *
+ * using BasicContainer = Adapter<NoDifferenceType>;
+ * using GoodContainer = Adapter<WithDifferenceType>;
+ *
+ * static_assert( std::is_void_v<BasicContainer::difference_type> );
+ * static_assert(std::is_same<GoodContainer::difference_type, int>::value);
+ * \endcode
+ *
+ * \code
+ * #include <Mdt/is_detected.h>
+ * #include <type_traits>
+ * #include <cassert>
+ *
+ * struct Item
+ * {
+ *   int id = 0;
+ * };
+ *
+ * struct FixedSizeContainer
+ * {
+ *   using const_reference = const Item &;
+ * };
+ *
+ * struct ContainerWithPushBack
+ * {
+ *   using const_reference = const Item &;
+ *
+ *   void push_back(const Item & item);
+ * };
+ *
+ * template<typename Container>
+ * constexpr
+ * bool container_has_push_back() noexcept
+ * {
+ *   return ??
+ * }
+ *
+ * template<typename Container>
+ * struct Adapter
+ * {
+ *   using const_reference = typename Container::const_reference;
+ *
+ *   bool append(const_reference element)
+ *   {
+ *     if constexpr( container_has_push_back<Container>() ){
+ *       container.push_back(element);
+ *       return true;
+ *     }
+ *     return false;
+ *   }
+ *
+ *   Container container;
+ * };
+ *
+ * using BasicContainer = Adapter<FixedSizeContainer>;
+ * using GoodContainer = Adapter<ContainerWithPushBack>;
+ *
+ * Adapter<FixedSizeContainer> fixedSizeContainer;
+ * Adapter<ContainerWithPushBack> containerWithPushBack;
+ *
+ * assert( !fixedSizeContainer.append( Item{} ) );
+ * assert( containerWithPushBack.append( Item{} ) );
+ * \endcode
+ *
+ *
+ * \sa https://en.cppreference.com/w/cpp/experimental/is_detected
+ * \sa https://www.boost.org/doc/libs/1_87_0/libs/type_traits/doc/html/boost_typetraits/reference/is_detected.html
+ * \sa http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2015/n4502.pdf
+ */

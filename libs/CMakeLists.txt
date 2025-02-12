@@ -3,6 +3,7 @@
 
 if(BUILD_ITEM_MODEL)
   add_subdirectory(ItemModel)
+  add_subdirectory(TypeTraits)
 endif()
 
 if(BUILD_ITEM_MODEL_TEST_LIB)

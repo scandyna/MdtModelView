@@ -10,6 +10,8 @@
 
 /*! \mainpage %Mdt Model/View C++ API Documentation
  *
+ * \ref TypeTraits_dox
+ *
  * \ref ItemModel_dox
  *
  * \ref ItemView_dox

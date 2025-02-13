@@ -20,10 +20,20 @@
  *
  * \section TypeTraits_DetectionIdiom Detection Idiom
  *
- * 
+ * Example to make a member type available or replace it with void:
  * \code
- * #include <Mdt/detected_or.h>
+ * #include <Mdt/TypeTraits/detected_or.h>
  * #include <type_traits>
+ *
+ * namespace Impl{
+ *
+ *   template<typename Container>
+ *   using get_member_difference_type_op = typename Container::difference_type;
+ *
+ * } // namespace Impl{
+ *
+ * template<typename Container>
+ * using get_member_difference_type_or_void = Mdt::TypeTraits::detected_or_t<void, Impl::get_member_difference_type_op, Container>;
  *
  * struct NoDifferenceType
  * {
@@ -38,7 +48,7 @@
  * struct Adapter
  * {
  *   // Will be Container::difference_type if it defines it, otherwise void
- *   using difference_type = ??
+ *   using difference_type = get_member_difference_type_or_void<Container>;
  * };
  *
  * using BasicContainer = Adapter<NoDifferenceType>;
@@ -48,10 +58,31 @@
  * static_assert(std::is_same<GoodContainer::difference_type, int>::value);
  * \endcode
  *
+ * Example to detect if a member function exists:
  * \code
- * #include <Mdt/is_detected.h>
+ * #include <Mdt/TypeTraits/is_detected.h>
  * #include <type_traits>
+ * #include <vector>
  * #include <cassert>
+ *
+ * namespace Impl{
+ *
+ *  template<typename Container>
+ *  using has_insert_op = decltype(
+ *    std::declval<Container>().insert( std::declval<typename Container::const_iterator>(),
+ *                                      std::declval<typename Container::size_type>(),
+ *                                      std::declval<typename Container::const_reference>() )
+ *  );
+ *
+ * } // namespace Impl{
+ *
+ * template<typename Container>
+ * constexpr
+ * bool containerSupportsInsert() noexcept
+ * {
+ *   return Mdt::TypeTraits::is_detected_v<Impl::has_insert_op, Container>;
+ * }
+ *
  *
  * struct Item
  * {
@@ -60,32 +91,30 @@
  *
  * struct FixedSizeContainer
  * {
+ *   using size_type = std::vector<Item>::size_type;
  *   using const_reference = const Item &;
  * };
  *
- * struct ContainerWithPushBack
+ * struct ContainerWithInsert
  * {
+ *   using size_type = std::vector<Item>::size_type;
  *   using const_reference = const Item &;
+ *   using const_iterator = std::vector<Item>::const_iterator;
  *
- *   void push_back(const Item & item);
+ *   void insert(const_iterator pos, size_type count, const Item & item);
  * };
  *
- * template<typename Container>
- * constexpr
- * bool container_has_push_back() noexcept
- * {
- *   return ??
- * }
  *
  * template<typename Container>
  * struct Adapter
  * {
  *   using const_reference = typename Container::const_reference;
  *
- *   bool append(const_reference element)
+ *   bool insert(int index, int count, const_reference element)
  *   {
- *     if constexpr( container_has_push_back<Container>() ){
- *       container.push_back(element);
+ *     if constexpr( containerSupportsInsert<Container>() ){
+ *       // private helper to convert between iterator, size_type - int
+ *       insertImpl(index, count, element);
  *       return true;
  *     }
  *     return false;
@@ -94,14 +123,11 @@
  *   Container container;
  * };
  *
- * using BasicContainer = Adapter<FixedSizeContainer>;
- * using GoodContainer = Adapter<ContainerWithPushBack>;
- *
  * Adapter<FixedSizeContainer> fixedSizeContainer;
- * Adapter<ContainerWithPushBack> containerWithPushBack;
+ * Adapter<ContainerWithInsert> containerWithInsert;
  *
  * assert( !fixedSizeContainer.append( Item{} ) );
- * assert( containerWithPushBack.append( Item{} ) );
+ * assert( containerWithInsert.append( Item{} ) );
  * \endcode
  *
  *

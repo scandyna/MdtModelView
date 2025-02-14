@@ -2,16 +2,14 @@
 include(MdtAddTest)
 
 
-# TODO: check if Catch2Main is required
 mdt_add_test(
   NAME DetectedOrTest
-  TARGET detectedOrTest.cpp
-  DEPENDENCIES Mdt::TypeTraits Mdt::Catch2Main
+  TARGET detectedOrTest
+  DEPENDENCIES Mdt::TypeTraits
   SOURCE_FILES
     src/DetectedOrTest.cpp
 )
 
-# TODO: check if Catch2Main is required
 mdt_add_test(
   NAME IsDetectedTest
   TARGET isDetectedTest

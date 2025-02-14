@@ -8,25 +8,21 @@
  ** or copy at http://www.boost.org/LICENSE_1_0.txt)
  **
  *****************************************************************************************/
-#include "Mdt/TypeTraits/detected_or.h"
 #include "Mdt/TypeTraits/is_detected.h"
 #include <utility>
 #include <vector>
-// #include "catch2/catch.hpp"
+#include "catch2/catch.hpp"
+
 
 struct Item
 {
   int id = 0;
 };
 
-struct NoInsert
+struct FixedSizeContainer
 {
+  using const_reference = const Item &;
 };
-
-// struct WithInsert
-// {
-//   void insert(int count, bool b);
-// };
 
 struct ContainerWithInsert
 {
@@ -47,7 +43,7 @@ namespace Impl{
                                       std::declval<typename Container::const_reference>() )
   );
 
-  static_assert( !Mdt::TypeTraits::is_detected_v<has_insert_op, NoInsert> );
+  static_assert( !Mdt::TypeTraits::is_detected_v<has_insert_op, FixedSizeContainer> );
   static_assert( Mdt::TypeTraits::is_detected_v<has_insert_op, ContainerWithInsert> );
 
 } // namespace Impl{
@@ -60,81 +56,47 @@ bool containerSupportsInsert() noexcept
   return Mdt::TypeTraits::is_detected_v<Impl::has_insert_op, Container>;
 }
 
-static_assert( !containerSupportsInsert<NoInsert>() );
+static_assert( !containerSupportsInsert<FixedSizeContainer>() );
 static_assert( containerSupportsInsert<ContainerWithInsert>() );
-
-
-/** detected_or
- */
-
-struct NoDifferenceType
-{
-};
-
-struct WithDifferenceType
-{
-  using difference_type = int;
-};
-
-namespace Impl{
-
-  /*! \internal
-   */
-  template<typename Container>
-  using get_member_difference_type_op = typename Container::difference_type;
-
-  // template<typename Container, typename MemberType>
-  // using get_member_type_op = typename Container::MemberType;
-
-} // namespace Impl{
-
-/*! \brief
- */
-template<typename Container>
-using get_member_difference_type_or_void = Mdt::TypeTraits::detected_or_t<void, Impl::get_member_difference_type_op, Container>;
-
-
 
 
 template<typename Container>
 struct Adapter
 {
-  // Will be Container::difference_type if it defines it, otherwise void
-  using difference_type = get_member_difference_type_or_void<Container>;
-  // using difference_type = Mdt::detected_or_t<void, get_difference_type_op, Container>;
-  // using difference_type = difference_type<Container>;
+  using const_reference = typename Container::const_reference;
 
-  bool insert()
+  bool insert([[maybe_unused]] int index, [[maybe_unused]] int count, [[maybe_unused]] const_reference element)
   {
     if constexpr( containerSupportsInsert<Container>() ){
+      // private helper to convert between iterator, size_type - int
+      insertImpl(index, count, element);
+      return true;
     }
     return false;
   }
+
+  void insertImpl(int, int, const_reference)
+  {
+  }
 };
 
-using BasicContainer = Adapter<NoDifferenceType>;
-using GoodContainer = Adapter<WithDifferenceType>;
-
-static_assert(std::is_void_v<BasicContainer::difference_type>);
-static_assert(std::is_same<GoodContainer::difference_type, int>::value);
+Adapter<FixedSizeContainer> fixedSizeContainer;
+Adapter<ContainerWithInsert> containerWithInsert;
 
 
-// Example from Clow
-
-struct Yes
+TEST_CASE("insert")
 {
-  using size_type = unsigned int;
-};
+  SECTION("fixed size container")
+  {
+    Adapter<FixedSizeContainer> fixedSizeContainer;
 
-struct No
-{
-};
+    CHECK( !fixedSizeContainer.insert( 0, 1, Item{} ) );
+  }
 
-template<typename T>
-using has_size = typename T::size_type;
+  SECTION("container with insert")
+  {
+    Adapter<ContainerWithInsert> containerWithInsert;
 
-template<typename T>
-void doSomething(const T & t)
-{
-  Mdt::TypeTraits::detected_or<short, has_size, T> v;
+    CHECK( containerWithInsert.insert( 0, 1, Item{} ) );
+  }
 }

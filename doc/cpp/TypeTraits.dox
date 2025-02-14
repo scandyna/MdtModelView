@@ -126,8 +126,8 @@
  * Adapter<FixedSizeContainer> fixedSizeContainer;
  * Adapter<ContainerWithInsert> containerWithInsert;
  *
- * assert( !fixedSizeContainer.append( Item{} ) );
- * assert( containerWithInsert.append( Item{} ) );
+ * assert( !fixedSizeContainer.insert( 0, 1, Item{} ) );
+ * assert( containerWithInsert.insert( 0, 1, Item{} ) );
  * \endcode
  *
  *

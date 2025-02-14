@@ -11,6 +11,7 @@
 #include <Mdt/TypeTraits/detected_or.h>
 #include <type_traits>
 
+
 namespace Impl{
 
   template<typename Container>
@@ -38,8 +39,13 @@ struct Adapter
   using difference_type = get_member_difference_type_or_void<Container>;
 };
 
+
 using BasicContainer = Adapter<NoDifferenceType>;
 using GoodContainer = Adapter<WithDifferenceType>;
 
 static_assert( std::is_void_v<BasicContainer::difference_type> );
 static_assert(std::is_same<GoodContainer::difference_type, int>::value);
+
+int main()
+{
+}

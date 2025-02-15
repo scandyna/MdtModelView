@@ -7,20 +7,21 @@
  ** Version 1.0. (See accompanying file LICENSE_1_0.txt
  ** or copy at http://www.boost.org/LICENSE_1_0.txt)
  **
+ *****************************************************************************************
+ ** This is almost a copy paste from
+ ** https://en.cppreference.com/w/cpp/experimental/nonesuch
  *****************************************************************************************/
-#ifndef MDT_TYPE_TRAITS_DETAIL_DETECTOR_H
-#define MDT_TYPE_TRAITS_DETAIL_DETECTOR_H
-
-#ifdef MDT_TYPE_TRAITS_COMPILER_SUPPORTS_DETECTION_IDIOM
- #include "Mdt/TypeTraits/detail/detector_std.h"
-#else
- #include "Mdt/TypeTraits/detail/detector_custom.h"
-#endif // #ifdef MDT_TYPE_TRAITS_COMPILER_SUPPORTS_DETECTION_IDIOM
+#ifndef MDT_TYPE_TRAITS_IMPL_NONESUCH_CUSTOM_H
+#define MDT_TYPE_TRAITS_IMPL_NONESUCH_CUSTOM_H
 
 namespace Mdt{ namespace TypeTraits{ namespace Impl{
 
-  
+  struct nonesuch {
+    ~nonesuch() = delete;
+    nonesuch(nonesuch const&) = delete;
+    void operator=(nonesuch const&) = delete;
+  };
 
 }}} // namespace Mdt{ namespace TypeTraits{ namespace Impl{
 
-#endif // #ifndef MDT_TYPE_TRAITS_DETAIL_DETECTOR_H
+#endif // #ifndef MDT_TYPE_TRAITS_IMPL_NONESUCH_CUSTOM_H

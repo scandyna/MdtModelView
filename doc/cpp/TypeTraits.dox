@@ -20,6 +20,20 @@
  *
  * \section TypeTraits_DetectionIdiom Detection Idiom
  *
+ * \sa https://en.cppreference.com/w/cpp/experimental/is_detected
+ * \sa https://www.boost.org/doc/libs/1_87_0/libs/type_traits/doc/html/boost_typetraits/reference/is_detected.html
+ * \sa http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2015/n4502.pdf
+ *
+ * \subsection TypeTraits_DetectionIdiom_BaseTypeTraits Base detection idiom type traits
+ *
+ * Provides the bases of the detection idiom,
+ * like proposed in the library fundamentals TS v2.
+ *
+ * If the compiler provides thoses bases, they will be used,
+ * otherwise a custom implementation is provided.
+ *
+ * To make this work, those base type traits are shifted into the Mdt::TypeTraits namespace.
+ *
  * Example to make a member type available or replace it with void:
  * \code
  * #include <Mdt/TypeTraits/detected_or.h>
@@ -62,6 +76,7 @@
  * \code
  * #include <Mdt/TypeTraits/is_detected.h>
  * #include <type_traits>
+ * #include <utility>
  * #include <vector>
  * #include <cassert>
  *
@@ -130,8 +145,83 @@
  * assert( containerWithInsert.insert( 0, 1, Item{} ) );
  * \endcode
  *
+ * \subsection TypeTraits_DetectionIdiom_StlContainerHelpers STL container helpers
  *
- * \sa https://en.cppreference.com/w/cpp/experimental/is_detected
- * \sa https://www.boost.org/doc/libs/1_87_0/libs/type_traits/doc/html/boost_typetraits/reference/is_detected.html
- * \sa http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2015/n4502.pdf
+ * Some helper functions are provided to detect STL member types, like \a value_type ,
+ * as well as the presence of some member functions, like \a insert() .
+ *
+ * \code
+ * #include <Mdt/TypeTraits/StlContainerHelpers.h>
+ * #include <vector>
+ * #include <cassert>
+ *
+ * template<typename Container>
+ * class Adapter
+ * {
+ *  public:
+ *
+ *   // size_type is mandatory
+ *   using size_type = typename Container::size_type;
+ *
+ *   // const_reference is mandatory
+ *   using const_reference = typename Container::const_reference;
+ *
+ *   // Will be Container::const_iterator if it defines it, otherwise void
+ *   using const_iterator = Mdt::TypeTraits::member_const_iterator_or_void<Container>;
+ *
+ *   bool insert(int index, int count, const_reference element)
+ *   {
+ *     if constexpr( Mdt::TypeTraits::has_member_insert_pos_count_value<Container>() ){
+ *       // Helpers to convert between iterator, size_type - int
+ *       const_iterator pos = iteratorFromIndex(index);
+ *       size_type sCount = sizeTypeFromInt(count);
+ *       mContainer.insert(pos, sCount, element);
+ *       return true;
+ *     }
+ *     return false;
+ *   }
+ *
+ *  private:
+ *
+ *   Container mContainer;
+ * };
+ *
+ *
+ * struct Item
+ * {
+ *   int id = 0;
+ * };
+ *
+ * struct FixedSizeContainer
+ * {
+ *   using size_type = std::vector<Item>::size_type;
+ *   using const_reference = const Item &;
+ * };
+ *
+ * struct ContainerWithInsert
+ * {
+ *   using size_type = std::vector<Item>::size_type;
+ *   using const_reference = const Item &;
+ *   using const_iterator = std::vector<Item>::const_iterator;
+ *
+ *   void insert(const_iterator pos, size_type count, const Item & item);
+ * };
+ *
+ * Adapter<FixedSizeContainer> fixedSizeContainer;
+ * Adapter<ContainerWithInsert> containerWithInsert;
+ *
+ * assert( !fixedSizeContainer.insert( 0, 1, Item{} ) );
+ * assert( containerWithInsert.insert( 0, 1, Item{} ) );
+ * \endcode
+ *
+ * \sa Mdt::TypeTraits
  */
+
+namespace Mdt{
+
+  /*! \brief Mdt::TypeTraits namespace
+   */
+  namespace TypeTraits {
+  }
+
+}

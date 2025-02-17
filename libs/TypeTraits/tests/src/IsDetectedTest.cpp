@@ -80,9 +80,6 @@ struct Adapter
   }
 };
 
-Adapter<FixedSizeContainer> fixedSizeContainer;
-Adapter<ContainerWithInsert> containerWithInsert;
-
 
 TEST_CASE("insert")
 {

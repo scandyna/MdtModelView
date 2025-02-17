@@ -17,3 +17,11 @@ mdt_add_test(
   SOURCE_FILES
     src/IsDetectedTest.cpp
 )
+
+mdt_add_test(
+  NAME StlContainerHelpersTest
+  TARGET stlContainerHelpersTest
+  DEPENDENCIES Mdt::TypeTraits Mdt::Catch2Main
+  SOURCE_FILES
+    src/StlContainerHelpersTest.cpp
+)

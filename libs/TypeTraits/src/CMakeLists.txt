@@ -5,6 +5,7 @@ include(MdtInstallLibrary)
 add_library(Mdt_TypeTraits
   Mdt/TypeTraits/detected_or.cpp
   Mdt/TypeTraits/is_detected.cpp
+  Mdt/TypeTraits/StlContainerHelpers.cpp
 )
 
 add_library(Mdt::TypeTraits ALIAS Mdt_TypeTraits)

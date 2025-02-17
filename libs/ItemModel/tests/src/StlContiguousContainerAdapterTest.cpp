@@ -13,6 +13,9 @@
 // #include <catch2/catch_template_test_macros.hpp>
 #include <vector>
 
+#include "Item.h"
+#include "ReadOnlyList.h"
+
 #include "Mdt/ItemModel/SharedStlContiguousContainerAdapter.h"
 
 #include "Mdt/ItemModel/StlHelpers.h"
@@ -288,6 +291,32 @@ If you want const_reference to default to void when missing:
 
 namespace Impl{
 
+  // template<typename, typename, typename = void>
+  // struct TypeMemberOr_void
+  // {
+  //   using type = void;
+  // };
+  // 
+  // template<typename Container, typename Type>
+  // struct TypeMemberOr_void< Container, Type, std::void_t<typename Container::Type> >
+  // {
+  //   using type = typename Container::Type;
+  // };
+
+
+  template<typename, typename = void>
+  struct difference_type_TypeMemberOr_void
+  {
+    using type = void;
+  };
+
+  template<typename T>
+  struct difference_type_TypeMemberOr_void< T, std::void_t<typename T::difference_type> >
+  {
+    using type = typename T::difference_type;
+  };
+
+
   template<typename, typename = void>
   struct reference_TypeMemberOr_void
   {
@@ -298,6 +327,19 @@ namespace Impl{
   struct reference_TypeMemberOr_void< T, std::void_t<typename T::reference> >
   {
     using type = typename T::reference;
+  };
+
+
+  template<typename, typename = void>
+  struct const_iterator_TypeMemberOr_void
+  {
+    using type = void;
+  };
+
+  template<typename T>
+  struct const_iterator_TypeMemberOr_void< T, std::void_t<typename T::const_iterator> >
+  {
+    using type = typename T::const_iterator;
   };
 
 } // namespace Impl{
@@ -344,12 +386,12 @@ struct MyModelWithReference
  * \sa https://en.cppreference.com/w/cpp/types/integral_constant
  */
 // primary template handles types that have no nested ::type member:
-template<typename, typename = void>
-struct has_type_member : std::false_type {};
+// template<typename, typename = void>
+// struct has_type_member : std::false_type {};
  
 // specialization recognizes types that do have a nested ::type member:
-template<typename T>
-struct has_type_member<T, std::void_t<typename T::type>> : std::true_type {};
+// template<typename T>
+// struct has_type_member<T, std::void_t<typename T::type>> : std::true_type {};
 
 
   /*! \brief Adapter to use STL style containers with Qt item models
@@ -398,12 +440,20 @@ struct has_type_member<T, std::void_t<typename T::type>> : std::true_type {};
      */
     using size_type = typename FunctionMap::size_type;
 
+    /*! \brief STL difference_type
+     *
+     * Will be FunctionMap::difference_type if \a FunctionMap defines it,
+     * otherwise void.
+     */
+    using difference_type = typename Impl::difference_type_TypeMemberOr_void<FunctionMap>::type;
+
     /*! \brief STL reference
      *
      * Will be FunctionMap::reference if \a FunctionMap defines it,
      * otherwise void.
      */
     using reference = typename Impl::reference_TypeMemberOr_void<FunctionMap>::type;
+    // using reference = typename Impl::TypeMemberOr_void<FunctionMap, typename FunctionMap::reference>::type;
     // using reference = typename TypeMap::reference;
 
     /*! \brief STL const_reference
@@ -411,7 +461,11 @@ struct has_type_member<T, std::void_t<typename T::type>> : std::true_type {};
     using const_reference = typename FunctionMap::const_reference;
 
     /*! \brief STL const_iterator
+     *
+     * Will be FunctionMap::const_iterator if \a FunctionMap defines it,
+     * otherwise void.
      */
+    using const_iterator = typename Impl::const_iterator_TypeMemberOr_void<FunctionMap>::type;
     // using const_iterator = typename TypeMap::const_iterator;
 
     // using const_reference = typename Container::const_reference;
@@ -446,7 +500,7 @@ struct has_type_member<T, std::void_t<typename T::type>> : std::true_type {};
     // template<typename ReferenceType>
     reference atRowMutable(int row) noexcept
     {
-      static_assert( !std::is_void_v<reference>, "call StlContainerAdapter::atRowMutable() requires FunctionMap::reference to be defined" );
+      static_assert( !std::is_void_v<reference>, "call StlContiguousContainerAdapter::atRowMutable() requires FunctionMap::reference to be defined" );
 
       /// \todo use size_type
       
@@ -466,6 +520,8 @@ struct has_type_member<T, std::void_t<typename T::type>> : std::true_type {};
     /*! \brief Get the row corresponding to given position
      *
      * \pre \a pos must be of type of the container's const_iterator
+     *
+     * \todo use const_iterator
      */
     template<typename Iterator>
     int rowFromPosition(Iterator pos) const
@@ -492,9 +548,12 @@ struct has_type_member<T, std::void_t<typename T::type>> : std::true_type {};
     bool insertRows(int row, int count, const_reference value)
     {
       if constexpr( FunctionMap::supportsInsert() ){
+        static_assert( !std::is_void_v<difference_type>, "call StlContiguousContainerAdapter::insertRows() requires FunctionMap::difference_type to be defined" );
+        static_assert( !std::is_void_v<const_iterator>, "call StlContiguousContainerAdapter::insertRows() requires FunctionMap::const_iterator to be defined" );
+
         /// calc iterator + difference + check + cast
         // const auto pos = const_iterator{};
-        // /// \todo adapt and use insertToStlContainer()
+        /// \todo adapt and use insertToStlContainer()
         // FunctionMap::insert(mContainer);
         // return true;
       }
@@ -508,6 +567,9 @@ struct has_type_member<T, std::void_t<typename T::type>> : std::true_type {};
     bool removeRows(int row, int count)
     {
       if constexpr( FunctionMap::supportsErase() ){
+        static_assert( !std::is_void_v<difference_type>, "call StlContiguousContainerAdapter::removeRows() requires FunctionMap::difference_type to be defined" );
+        static_assert( !std::is_void_v<const_iterator>, "call StlContiguousContainerAdapter::removeRows() requires FunctionMap::const_iterator to be defined" );
+
         /// \todo Adapt and use removeFromStlContainer()
       }
       return false;
@@ -517,29 +579,11 @@ struct has_type_member<T, std::void_t<typename T::type>> : std::true_type {};
   };
 
 
-  struct MyItem
-  {
-    int id = 0;
-    QString name;
-  };
 
   /** Read only example
    *
    */
 
-  struct MyReadOnlyList
-  {
-    using size_type = std::vector<MyItem>::size_type;
-
-    size_type getSizeCustom() const noexcept
-    {
-      return 25;
-    }
-
-    const MyItem & itemAt(size_type index) const noexcept
-    {
-    }
-  };
 
   /**
    * NOTE:
@@ -552,15 +596,8 @@ struct has_type_member<T, std::void_t<typename T::type>> : std::true_type {};
    */
   struct MyReadOnlyListTableModelAdapterFunctionMap
   {
-    using size_type = MyReadOnlyList::size_type;
-    using const_reference = const MyItem &;
-
-    // static
-    // constexpr
-    // bool supportsAtIndexMutable() noexcept
-    // {
-    //   return false;
-    // }
+    using size_type = ReadOnlyList::size_type;
+    using const_reference = const Item &;
 
     static
     constexpr
@@ -577,13 +614,13 @@ struct has_type_member<T, std::void_t<typename T::type>> : std::true_type {};
     }
 
     static
-    size_type size(const MyReadOnlyList & list) noexcept
+    size_type size(const ReadOnlyList & list) noexcept
     {
       return list.getSizeCustom();
     }
 
     static
-    const_reference atIndex(const MyReadOnlyList & list, size_type index) noexcept
+    const_reference atIndex(const ReadOnlyList & list, size_type index) noexcept
     {
       return list.itemAt(index);
     }
@@ -607,27 +644,27 @@ struct has_type_member<T, std::void_t<typename T::type>> : std::true_type {};
       return QVariant();
     }
 
-    StlContainerAdapter<MyReadOnlyList, MyReadOnlyListTableModelAdapterFunctionMap> mList;
+    StlContainerAdapter<ReadOnlyList, MyReadOnlyListTableModelAdapterFunctionMap> mList;
   };
 
 
   /** Mutable example (NOT resizable)
    */
 
-  struct MyMutableList
+  struct MutableList
   {
-    using size_type = std::vector<MyItem>::size_type;
+    using size_type = std::vector<Item>::size_type;
 
     size_type getSizeCustom() const noexcept
     {
       return 25;
     }
 
-    const MyItem & itemAt(size_type index) const noexcept
+    const Item & itemAt(size_type index) const noexcept
     {
     }
 
-    MyItem & mutableItemAt(size_type index) noexcept
+    Item & mutableItemAt(size_type index) noexcept
     {
     }
   };
@@ -637,13 +674,6 @@ struct has_type_member<T, std::void_t<typename T::type>> : std::true_type {};
     using size_type = MyMutableList::size_type;
     using const_reference = const MyItem &;
     using reference = MyItem &;
-
-    // static
-    // constexpr
-    // bool supportsAtIndexMutable() noexcept
-    // {
-    //   return true;
-    // }
 
     static
     constexpr
@@ -678,6 +708,7 @@ struct has_type_member<T, std::void_t<typename T::type>> : std::true_type {};
     }
   };
 
+  /// \todo table model
 
   /** Read only and resizable example
    *
@@ -711,13 +742,6 @@ struct has_type_member<T, std::void_t<typename T::type>> : std::true_type {};
     using size_type = MyReadOnlyResizableList::size_type;
     using const_reference = const MyItem &;
     using const_iterator = MyReadOnlyResizableList::const_iterator;
-
-    static
-    constexpr
-    bool supportsAtIndexMutable() noexcept
-    {
-      return false;
-    }
 
     static
     constexpr
@@ -762,43 +786,43 @@ struct has_type_member<T, std::void_t<typename T::type>> : std::true_type {};
     }
   };
 
-  // struct MyReadOnlyResizableListTableModel
-  // {
-  //   int rowCount() const
-  //   {
-  //     return mList.rowCount();
-  //   }
-  // 
-  //   int findRowOfId(int id) const noexcept
-  //   {
-  //     const auto it = mList.container().findItemWithId(id);
-  //     return mList.rowFromPosition(it);
-  // 
-  //     // const auto pred = [id](const MyItem & item) -> bool {
-  //     //   return MyList::isRequestedItem(item, id);
-  //     // };
-  //     // return mList.findRowOf(pred);
-  //   }
-  // 
-  //   bool insertRows(int row, int count)
-  //   {
-  //     // beginInsertRows() omitted
-  //     return mList.insertRows( row, count, MyItem() );
-  //     // endInsertRows() omitted
-  //   }
-  // 
-  //   // MyItem & sandboxMutableData(int row)
-  //   // {
-  //   //   // return mList.atRowMutable(row);
-  //   // }
-  // 
-  //   // bool insert()
-  //   // {
-  //   //   return mList.insert();
-  //   // }
-  // 
-  //   StlContainerAdapter<MyList, MyListTypeMap, MyListFunctionMap> mList;
-  // };
+  struct MyReadOnlyResizableListTableModel
+  {
+    int rowCount() const
+    {
+      return mList.rowCount();
+    }
+  
+//     int findRowOfId(int id) const noexcept
+//     {
+//       const auto it = mList.container().findItemWithId(id);
+//       return mList.rowFromPosition(it);
+//   
+//       // const auto pred = [id](const MyItem & item) -> bool {
+//       //   return MyList::isRequestedItem(item, id);
+//       // };
+//       // return mList.findRowOf(pred);
+//     }
+  
+    bool insertRows(int row, int count)
+    {
+      // beginInsertRows() omitted
+      return mList.insertRows( row, count, MyItem() );
+      // endInsertRows() omitted
+    }
+  
+    // MyItem & sandboxMutableData(int row)
+    // {
+    //   // return mList.atRowMutable(row);
+    // }
+  
+    // bool insert()
+    // {
+    //   return mList.insert();
+    // }
+  
+    StlContainerAdapter<MyReadOnlyResizableList, MyReadOnlyResizableListFunctionMap> mList;
+  };
 
 
   /** Mutable and resizable example
@@ -837,13 +861,6 @@ struct has_type_member<T, std::void_t<typename T::type>> : std::true_type {};
     using reference = MyItem &;
     using const_reference = const MyItem &;
     using const_iterator = MyMutableResizableList::const_iterator;
-
-    static
-    constexpr
-    bool supportsAtIndexMutable() noexcept
-    {
-      return true;
-    }
 
     static
     constexpr
@@ -892,6 +909,7 @@ struct has_type_member<T, std::void_t<typename T::type>> : std::true_type {};
     }
   };
 
+  /// \todo table model
 
   /** Read only example with iterator based find
    */
@@ -923,13 +941,6 @@ struct has_type_member<T, std::void_t<typename T::type>> : std::true_type {};
 
     static
     constexpr
-    bool supportsAtIndexMutable() noexcept
-    {
-      return false;
-    }
-
-    static
-    constexpr
     bool supportsInsert() noexcept
     {
       return false;
@@ -955,6 +966,7 @@ struct has_type_member<T, std::void_t<typename T::type>> : std::true_type {};
     }
   };
 
+  /// \todo table model
 
   /** Read only example with index based find
    */
@@ -984,13 +996,6 @@ struct has_type_member<T, std::void_t<typename T::type>> : std::true_type {};
 
     static
     constexpr
-    bool supportsAtIndexMutable() noexcept
-    {
-      return false;
-    }
-
-    static
-    constexpr
     bool supportsInsert() noexcept
     {
       return false;
@@ -1016,6 +1021,7 @@ struct has_type_member<T, std::void_t<typename T::type>> : std::true_type {};
     }
   };
 
+  /// \todo table model
 
 TEST_CASE("sandbox")
 {

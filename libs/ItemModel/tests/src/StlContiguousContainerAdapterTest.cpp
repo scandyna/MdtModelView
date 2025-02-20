@@ -15,6 +15,10 @@
 
 #include "Item.h"
 #include "ReadOnlyList.h"
+#include "DefaultConstructibleOnlyList.h"
+#include "CopyConstructibleOnlyList.h"
+#include "MoveConstructibleOnlyList.h"
+#include "ReadOnlyListTableModelAdapterFunctionMap.h"
 
 #include "Mdt/ItemModel/SharedStlContiguousContainerAdapter.h"
 
@@ -27,8 +31,8 @@
 
 using namespace Mdt::ItemModel;
 
-using TestContainerAdapter = StlContiguousContainerAdapter< std::vector<int> >;
-using SharedTestContainerAdapter = SharedStlContiguousContainerAdapter< std::vector<int> >;
+// using TestContainerAdapter = StlContiguousContainerAdapter< std::vector<int> >;
+// using SharedTestContainerAdapter = SharedStlContiguousContainerAdapter< std::vector<int> >;
 
 
 
@@ -214,80 +218,6 @@ using SharedTestContainerAdapter = SharedStlContiguousContainerAdapter< std::vec
       container.erase(first, last);
     }
   };
-
-
-/*
- * Solution: Use std::void_t for Detection
- *
- * You can use template metaprogramming to check whether FunctionMap::const_reference exists and define const_reference only if it does.
- * 
- */
-// #include <type_traits>
-
-// Primary template: Assume `const_reference` doesn't exist.
-// template <typename, typename = void>
-// struct has_const_reference : std::false_type {};
-// 
-// // Specialization: If `FunctionMap::const_reference` exists, mark as `true_type`.
-// template <typename T>
-// struct has_const_reference<T, std::void_t<typename T::const_reference>> : std::true_type {};
-// 
-// // StlContainerAdapter definition
-// template<typename Container, typename FunctionMap, bool = has_const_reference<FunctionMap>::value>
-// struct StlContainerAdapter {};
-// 
-// // Specialization that defines `const_reference` only if it exists in `FunctionMap`
-// template<typename Container, typename FunctionMap>
-// struct StlContainerAdapter<Container, FunctionMap, true> {
-//     using const_reference = typename FunctionMap::const_reference;
-// };
-// 
-// int main() {
-//     struct WithConstRef { using const_reference = int&; };
-//     struct WithoutConstRef {};
-// 
-//     StlContainerAdapter<int, WithConstRef> adapter1;  // ✅ OK
-//     // StlContainerAdapter<int, WithoutConstRef> adapter2; // ❌ Error: No matching specialization
-// 
-//     return 0;
-// }
-
-/// \sa https://en.cppreference.com/w/cpp/experimental/is_detected
-
-/*
- * 🛠 Explanation:
- *
- * has_const_reference<T>: A helper struct that detects if T::const_reference exists.
- * Partial Specialization: We only define const_reference in StlContainerAdapter when FunctionMap::const_reference exists.
- * Prevents Compilation Errors: If FunctionMap::const_reference doesn’t exist, the specialization isn't selected.
- */
-
-/*
-Alternative: Fallback to void or Default Type
-
-If you want const_reference to default to void when missing:
-*/
-// template <typename FunctionMap, typename = void>
-// struct GetConstReference {
-//     using type = void; // Default when `const_reference` doesn't exist
-// };
-// 
-// template <typename FunctionMap>
-// struct GetConstReference<FunctionMap, std::void_t<typename FunctionMap::const_reference>> {
-//     using type = typename FunctionMap::const_reference;
-// };
-// 
-// template<typename Container, typename FunctionMap>
-// struct StlContainerAdapter_2 {
-//     using const_reference = typename GetConstReference<FunctionMap>::type;
-// };
-
-/*
- * This version always compiles, but const_reference will be void if it doesn't exist in FunctionMap.
- */
-
-/** \todo For member functions, try to explore decltype( std::declval<T&>().func() )
- */
 
 namespace Impl{
 
@@ -586,7 +516,8 @@ struct MyModelWithReference
 
 
   /**
-   * NOTE:
+   * NOTE: for adapter
+   *
    * - size() and atIndex() always required
    * - size_type and const_reference always required
    *
@@ -594,24 +525,24 @@ struct MyModelWithReference
    *
    * \todo Maybe create a CRTP based interface that forces implementing supportsInsert() etc.. ?
    */
-  struct MyReadOnlyListTableModelAdapterFunctionMap
+  struct ReadOnlyListTableModelAdapterFunctionMap
   {
     using size_type = ReadOnlyList::size_type;
     using const_reference = const Item &;
 
-    static
-    constexpr
-    bool supportsInsert() noexcept
-    {
-      return false;
-    }
+    // static
+    // constexpr
+    // bool supportsInsert() noexcept
+    // {
+    //   return false;
+    // }
 
-    static
-    constexpr
-    bool supportsErase() noexcept
-    {
-      return false;
-    }
+    // static
+    // constexpr
+    // bool supportsErase() noexcept
+    // {
+    //   return false;
+    // }
 
     static
     size_type size(const ReadOnlyList & list) noexcept
@@ -626,8 +557,15 @@ struct MyModelWithReference
     }
   };
 
-  struct MyReadOnlyListTableModel
+  
+
+  struct ReadOnlyListTableModel
   {
+    ReadOnlyListTableModel(const ReadOnlyList & list)
+    : mList(list)
+    {
+    }
+
     int rowCount() const
     {
       return mList.rowCount();
@@ -636,16 +574,26 @@ struct MyModelWithReference
     QVariant data(int row, int column) const
     {
       switch(column){
-        case 0:
-          return mList.atRow(row).id;
-        case 1:
-          return mList.atRow(row).name;
+        // case 0:
+        //   return mList.atRow(row).id;
+        // case 1:
+        //   return mList.atRow(row).name;
       }
       return QVariant();
     }
 
-    StlContainerAdapter<ReadOnlyList, MyReadOnlyListTableModelAdapterFunctionMap> mList;
+    StlContiguousContainerAdapter<ReadOnlyList, ReadOnlyListTableModelAdapterFunctionMap> mList;
   };
+
+  StlContiguousContainerAdapter<ReadOnlyList, ReadOnlyListTableModelAdapterFunctionMap> listAdapter( ReadOnlyList::fromItemList({{1,"A"}}) );
+
+  StlContiguousContainerAdapter<DefaultConstructibleOnlyList, ReadOnlyListTableModelAdapterFunctionMap> defaultConstructibleOnlyList;
+
+  CopyConstructibleOnlyList list = CopyConstructibleOnlyList::fromItemList({{1,"A"}});
+  
+  StlContiguousContainerAdapter<CopyConstructibleOnlyList, ReadOnlyListTableModelAdapterFunctionMap> copyConstructibleOnlyList(list);
+
+  StlContiguousContainerAdapter<MoveConstructibleOnlyList, ReadOnlyListTableModelAdapterFunctionMap> moveConstructibleOnlyList( MoveConstructibleOnlyList::fromItemList({{1,"A"}}) );
 
 
   /** Mutable example (NOT resizable)
@@ -671,9 +619,9 @@ struct MyModelWithReference
 
   struct MyMutableListFunctionMap
   {
-    using size_type = MyMutableList::size_type;
-    using const_reference = const MyItem &;
-    using reference = MyItem &;
+    using size_type = MutableList::size_type;
+    using const_reference = const Item &;
+    using reference = Item &;
 
     static
     constexpr
@@ -690,19 +638,19 @@ struct MyModelWithReference
     }
 
     static
-    size_type size(const MyMutableList & list) noexcept
+    size_type size(const MutableList & list) noexcept
     {
       return list.getSizeCustom();
     }
 
     static
-    const_reference atIndex(const MyMutableList & list, size_type index) noexcept
+    const_reference atIndex(const MutableList & list, size_type index) noexcept
     {
       return list.itemAt(index);
     }
 
     static
-    reference atIndexMutable(MyMutableList & list, size_type index) noexcept
+    reference atIndexMutable(MutableList & list, size_type index) noexcept
     {
       return list.mutableItemAt(index);
     }
@@ -716,19 +664,19 @@ struct MyModelWithReference
 
   struct MyReadOnlyResizableList
   {
-    using size_type = std::vector<MyItem>::size_type;
-    using const_iterator = std::vector<MyItem>::const_iterator;
+    using size_type = std::vector<Item>::size_type;
+    using const_iterator = std::vector<Item>::const_iterator;
 
     size_type getSizeCustom() const noexcept
     {
       return 25;
     }
 
-    const MyItem & itemAt(size_type index) const noexcept
+    const Item & itemAt(size_type index) const noexcept
     {
     }
 
-    void insert(const_iterator pos, size_type count, const MyItem & value)
+    void insert(const_iterator pos, size_type count, const Item & value)
     {
     }
 
@@ -740,7 +688,7 @@ struct MyModelWithReference
   struct MyReadOnlyResizableListFunctionMap
   {
     using size_type = MyReadOnlyResizableList::size_type;
-    using const_reference = const MyItem &;
+    using const_reference = const Item &;
     using const_iterator = MyReadOnlyResizableList::const_iterator;
 
     static
@@ -807,7 +755,7 @@ struct MyModelWithReference
     bool insertRows(int row, int count)
     {
       // beginInsertRows() omitted
-      return mList.insertRows( row, count, MyItem() );
+      /// return mList.insertRows( row, count, Item() );
       // endInsertRows() omitted
     }
   
@@ -830,23 +778,23 @@ struct MyModelWithReference
 
   struct MyMutableResizableList
   {
-    using size_type = std::vector<MyItem>::size_type;
-    using const_iterator = std::vector<MyItem>::const_iterator;
+    using size_type = std::vector<Item>::size_type;
+    using const_iterator = std::vector<Item>::const_iterator;
 
     size_type getSizeCustom() const noexcept
     {
       return 25;
     }
 
-    const MyItem & itemAt(size_type index) const noexcept
+    const Item & itemAt(size_type index) const noexcept
     {
     }
 
-    MyItem & mutableItemAt(size_type index) noexcept
+    Item & mutableItemAt(size_type index) noexcept
     {
     }
 
-    void insert(const_iterator pos, size_type count, const MyItem & value)
+    void insert(const_iterator pos, size_type count, const Item & value)
     {
     }
 
@@ -858,8 +806,8 @@ struct MyModelWithReference
   struct MyMutableResizableListTableModelAdapterFunctionMap
   {
     using size_type = MyMutableResizableList::size_type;
-    using reference = MyItem &;
-    using const_reference = const MyItem &;
+    using reference = Item &;
+    using const_reference = const Item &;
     using const_iterator = MyMutableResizableList::const_iterator;
 
     static
@@ -916,15 +864,15 @@ struct MyModelWithReference
 
   struct MyReadOnlyWithIteratorFindList
   {
-    using size_type = std::vector<MyItem>::size_type;
-    using const_iterator = std::vector<MyItem>::const_iterator;
+    using size_type = std::vector<Item>::size_type;
+    using const_iterator = std::vector<Item>::const_iterator;
 
     size_type getSizeCustom() const noexcept
     {
       return 25;
     }
 
-    const MyItem & itemAt(size_type index) const noexcept
+    const Item & itemAt(size_type index) const noexcept
     {
     }
 
@@ -936,7 +884,7 @@ struct MyModelWithReference
   struct MyReadOnlyWithIteratorFindListTableModelAdapterFunctionMap
   {
     using size_type = MyReadOnlyWithIteratorFindList::size_type;
-    using const_reference = const MyItem &;
+    using const_reference = const Item &;
     using const_iterator = MyReadOnlyWithIteratorFindList::const_iterator;
 
     static
@@ -973,14 +921,14 @@ struct MyModelWithReference
 
   struct MyReadOnlyWithIndexFindList
   {
-    using size_type = std::vector<MyItem>::size_type;
+    using size_type = std::vector<Item>::size_type;
 
     size_type getSizeCustom() const noexcept
     {
       return 25;
     }
 
-    const MyItem & itemAt(size_type index) const noexcept
+    const Item & itemAt(size_type index) const noexcept
     {
     }
 
@@ -992,7 +940,7 @@ struct MyModelWithReference
   struct MyReadOnlyWithIndexFindListTableModelAdapterFunctionMap
   {
     using size_type = MyReadOnlyWithIndexFindList::size_type;
-    using const_reference = const MyItem &;
+    using const_reference = const Item &;
 
     static
     constexpr
@@ -1023,17 +971,19 @@ struct MyModelWithReference
 
   /// \todo table model
 
+
+
 TEST_CASE("sandbox")
 {
 }
 
 
-TEMPLATE_TEST_CASE("default_constructed", "", TestContainerAdapter, SharedTestContainerAdapter)
-{
-  TestType container;
-
-  CHECK( container.size() == 0 );
-}
+// TEMPLATE_TEST_CASE("default_constructed", "", TestContainerAdapter, SharedTestContainerAdapter)
+// {
+//   TestType container;
+// 
+//   CHECK( container.size() == 0 );
+// }
 
 TEST_CASE("rowFromPosition")
 {

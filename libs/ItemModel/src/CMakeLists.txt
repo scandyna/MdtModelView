@@ -21,6 +21,7 @@ add_library(Mdt_ItemModel
   Mdt/ItemModel/Helpers.cpp
   Mdt/ItemModel/StlHelpers.cpp
   Mdt/ItemModel/StlContiguousContainerAdapter.cpp
+  Mdt/ItemModel/SharedStlContiguousContainerAdapter.cpp
 )
 
 add_library(Mdt::ItemModel ALIAS Mdt_ItemModel)
@@ -45,6 +46,8 @@ target_include_directories(Mdt_ItemModel
 target_link_libraries(Mdt_ItemModel
   PUBLIC
     Qt5::Core
+    Mdt0::Numeric
+    Mdt::TypeTraits
 )
 
 generate_export_header(Mdt_ItemModel)

@@ -34,11 +34,14 @@ class MoveConstructibleOnlyList
   }
 
   static
-  MoveConstructibleOnlyList fromItemList(const std::vector<Item> & itemList) noexcept
-  {
-  }
+  MoveConstructibleOnlyList fromItemList(const std::vector<Item> & itemList) noexcept;
 
  private:
+
+  MoveConstructibleOnlyList(const std::vector<Item> & itemList)
+   : mList(itemList)
+  {
+  }
 
   std::vector<Item> mList;
 };

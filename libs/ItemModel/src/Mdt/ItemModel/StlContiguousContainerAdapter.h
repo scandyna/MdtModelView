@@ -490,12 +490,6 @@ namespace Mdt{ namespace ItemModel{
     explicit
     StlContiguousContainerAdapter() noexcept(std::is_nothrow_default_constructible_v<Container>) = default;
 
-    // // explicit
-    // StlContiguousContainerAdapter(Container && container)
-    //  : mContainer( std::forward(container) )
-    // {
-    // }
-
     /*! \brief Construct an adapter with a copy of given container
      */
     explicit
@@ -518,8 +512,10 @@ namespace Mdt{ namespace ItemModel{
      */
     int rowCount() const
     {
+      // assert( Mdt::Numeric::int_canHoldValueOf_size_t( FunctionMap::size(mContainer) ) );
       assert( Mdt::Numeric::int_canHoldValueOf_T( FunctionMap::size(mContainer) ) );
 
+      // return Mdt::Numeric::int_from_size_t( FunctionMap::size(mContainer) );
       return Mdt::Numeric::int_from_T( FunctionMap::size(mContainer) );
     }
 

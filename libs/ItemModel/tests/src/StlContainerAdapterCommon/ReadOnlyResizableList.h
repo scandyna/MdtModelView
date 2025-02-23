@@ -7,9 +7,11 @@
  ** Copyright (C) 2025-2025 Philippe Steinmann.
  **
  *****************************************************************************************/
-#include "CopyConstructibleOnlyList.h"
+#ifndef READ_ONLY_RESIZABLE_LIST_H
+#define READ_ONLY_RESIZABLE_LIST_H
 
-CopyConstructibleOnlyList CopyConstructibleOnlyList::fromItemList(const std::vector<Item> & itemList) noexcept
-{
-  return CopyConstructibleOnlyList(itemList);
-}
+#include "Item.h"
+#include <vector>
+
+
+#endif // #ifndef READ_ONLY_RESIZABLE_LIST_H

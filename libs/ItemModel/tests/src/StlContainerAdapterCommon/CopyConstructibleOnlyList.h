@@ -34,11 +34,14 @@ class CopyConstructibleOnlyList
   }
 
   static
-  CopyConstructibleOnlyList fromItemList(const std::vector<Item> & itemList) noexcept
-  {
-  }
+  CopyConstructibleOnlyList fromItemList(const std::vector<Item> & itemList) noexcept;
 
  private:
+
+  CopyConstructibleOnlyList(const std::vector<Item> & itemList)
+   : mList(itemList)
+  {
+  }
 
   std::vector<Item> mList;
 };

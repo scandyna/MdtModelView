@@ -8,3 +8,8 @@
  **
  *****************************************************************************************/
 #include "MoveConstructibleOnlyList.h"
+
+MoveConstructibleOnlyList MoveConstructibleOnlyList::fromItemList(const std::vector<Item> & itemList) noexcept
+{
+  return MoveConstructibleOnlyList(itemList);
+}

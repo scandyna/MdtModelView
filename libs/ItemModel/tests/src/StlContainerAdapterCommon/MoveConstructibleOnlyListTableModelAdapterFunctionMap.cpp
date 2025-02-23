@@ -7,9 +7,4 @@
  ** Copyright (C) 2025-2025 Philippe Steinmann.
  **
  *****************************************************************************************/
-#include "CopyConstructibleOnlyList.h"
-
-CopyConstructibleOnlyList CopyConstructibleOnlyList::fromItemList(const std::vector<Item> & itemList) noexcept
-{
-  return CopyConstructibleOnlyList(itemList);
-}
+#include "MoveConstructibleOnlyListTableModelAdapterFunctionMap.h"

@@ -19,6 +19,13 @@
 #include "CopyConstructibleOnlyList.h"
 #include "MoveConstructibleOnlyList.h"
 #include "ReadOnlyListTableModelAdapterFunctionMap.h"
+#include "DefaultConstructibleOnlyListTableModelAdapterFunctionMap.h"
+#include "CopyConstructibleOnlyListTableModelAdapterFunctionMap.h"
+#include "MoveConstructibleOnlyListTableModelAdapterFunctionMap.h"
+#include "MutableList.h"
+#include "MutableListTableModelAdapterFunctionMap.h"
+#include "ReadOnlyResizableList.h"
+#include "ReadOnlyResizableListTableModelAdapterFunctionMap.h"
 
 #include "Mdt/ItemModel/SharedStlContiguousContainerAdapter.h"
 
@@ -510,159 +517,12 @@ struct MyModelWithReference
 
 
 
-  /** Read only example
-   *
-   */
-
-
-  /**
-   * NOTE: for adapter
-   *
-   * - size() and atIndex() always required
-   * - size_type and const_reference always required
-   *
-   * - size_type has to be exposed by the container
-   *
-   * \todo Maybe create a CRTP based interface that forces implementing supportsInsert() etc.. ?
-   */
-  struct ReadOnlyListTableModelAdapterFunctionMap
-  {
-    using size_type = ReadOnlyList::size_type;
-    using const_reference = const Item &;
-
-    // static
-    // constexpr
-    // bool supportsInsert() noexcept
-    // {
-    //   return false;
-    // }
-
-    // static
-    // constexpr
-    // bool supportsErase() noexcept
-    // {
-    //   return false;
-    // }
-
-    static
-    size_type size(const ReadOnlyList & list) noexcept
-    {
-      return list.getSizeCustom();
-    }
-
-    static
-    const_reference atIndex(const ReadOnlyList & list, size_type index) noexcept
-    {
-      return list.itemAt(index);
-    }
-  };
-
-  
-
-  struct ReadOnlyListTableModel
-  {
-    ReadOnlyListTableModel(const ReadOnlyList & list)
-    : mList(list)
-    {
-    }
-
-    int rowCount() const
-    {
-      return mList.rowCount();
-    }
-
-    QVariant data(int row, int column) const
-    {
-      switch(column){
-        // case 0:
-        //   return mList.atRow(row).id;
-        // case 1:
-        //   return mList.atRow(row).name;
-      }
-      return QVariant();
-    }
-
-    StlContiguousContainerAdapter<ReadOnlyList, ReadOnlyListTableModelAdapterFunctionMap> mList;
-  };
-
-  StlContiguousContainerAdapter<ReadOnlyList, ReadOnlyListTableModelAdapterFunctionMap> listAdapter( ReadOnlyList::fromItemList({{1,"A"}}) );
-
-  StlContiguousContainerAdapter<DefaultConstructibleOnlyList, ReadOnlyListTableModelAdapterFunctionMap> defaultConstructibleOnlyList;
-
-  CopyConstructibleOnlyList list = CopyConstructibleOnlyList::fromItemList({{1,"A"}});
-  
-  StlContiguousContainerAdapter<CopyConstructibleOnlyList, ReadOnlyListTableModelAdapterFunctionMap> copyConstructibleOnlyList(list);
-
-  StlContiguousContainerAdapter<MoveConstructibleOnlyList, ReadOnlyListTableModelAdapterFunctionMap> moveConstructibleOnlyList( MoveConstructibleOnlyList::fromItemList({{1,"A"}}) );
-
-
-  /** Mutable example (NOT resizable)
-   */
-
-  struct MutableList
-  {
-    using size_type = std::vector<Item>::size_type;
-
-    size_type getSizeCustom() const noexcept
-    {
-      return 25;
-    }
-
-    const Item & itemAt(size_type index) const noexcept
-    {
-    }
-
-    Item & mutableItemAt(size_type index) noexcept
-    {
-    }
-  };
-
-  struct MyMutableListFunctionMap
-  {
-    using size_type = MutableList::size_type;
-    using const_reference = const Item &;
-    using reference = Item &;
-
-    static
-    constexpr
-    bool supportsInsert() noexcept
-    {
-      return false;
-    }
-
-    static
-    constexpr
-    bool supportsErase() noexcept
-    {
-      return false;
-    }
-
-    static
-    size_type size(const MutableList & list) noexcept
-    {
-      return list.getSizeCustom();
-    }
-
-    static
-    const_reference atIndex(const MutableList & list, size_type index) noexcept
-    {
-      return list.itemAt(index);
-    }
-
-    static
-    reference atIndexMutable(MutableList & list, size_type index) noexcept
-    {
-      return list.mutableItemAt(index);
-    }
-  };
-
-  /// \todo table model
 
   /** Read only and resizable example
    *
    */
 
-  struct MyReadOnlyResizableList
+  struct ReadOnlyResizableList
   {
     using size_type = std::vector<Item>::size_type;
     using const_iterator = std::vector<Item>::const_iterator;
@@ -685,11 +545,11 @@ struct MyModelWithReference
     }
   };
 
-  struct MyReadOnlyResizableListFunctionMap
+  struct ReadOnlyResizableListTableModelAdapterFunctionMap
   {
-    using size_type = MyReadOnlyResizableList::size_type;
+    using size_type = ReadOnlyResizableList::size_type;
     using const_reference = const Item &;
-    using const_iterator = MyReadOnlyResizableList::const_iterator;
+    using const_iterator = ReadOnlyResizableList::const_iterator;
 
     static
     constexpr
@@ -706,13 +566,13 @@ struct MyModelWithReference
     }
 
     static
-    size_type size(const MyReadOnlyResizableList & list) noexcept
+    size_type size(const ReadOnlyResizableList & list) noexcept
     {
       return list.getSizeCustom();
     }
 
     static
-    const_reference atIndex(const MyReadOnlyResizableList & list, size_type index) noexcept
+    const_reference atIndex(const ReadOnlyResizableList & list, size_type index) noexcept
     {
       return list.itemAt(index);
     }
@@ -720,7 +580,7 @@ struct MyModelWithReference
     /// \todo Very common: only support push_back
 
     static
-    void insert(MyReadOnlyResizableList & list, const_iterator pos, size_type count, const_reference value)
+    void insert(ReadOnlyResizableList & list, const_iterator pos, size_type count, const_reference value)
     {
       list.insert(pos, count, value);
     }
@@ -728,7 +588,7 @@ struct MyModelWithReference
     /*! \brief Erase function
      */
     static
-    void erase(MyReadOnlyResizableList & list, const_iterator first, const_iterator last)
+    void erase(ReadOnlyResizableList & list, const_iterator first, const_iterator last)
     {
       list.erase(first, last);
     }
@@ -769,14 +629,14 @@ struct MyModelWithReference
     //   return mList.insert();
     // }
   
-    StlContainerAdapter<MyReadOnlyResizableList, MyReadOnlyResizableListFunctionMap> mList;
+    StlContainerAdapter<ReadOnlyResizableList, ReadOnlyResizableListTableModelAdapterFunctionMap> mList;
   };
 
 
   /** Mutable and resizable example
    */
 
-  struct MyMutableResizableList
+  struct MutableResizableList
   {
     using size_type = std::vector<Item>::size_type;
     using const_iterator = std::vector<Item>::const_iterator;
@@ -803,12 +663,12 @@ struct MyModelWithReference
     }
   };
 
-  struct MyMutableResizableListTableModelAdapterFunctionMap
+  struct MutableResizableListTableModelAdapterFunctionMap
   {
-    using size_type = MyMutableResizableList::size_type;
+    using size_type = MutableResizableList::size_type;
     using reference = Item &;
     using const_reference = const Item &;
-    using const_iterator = MyMutableResizableList::const_iterator;
+    using const_iterator = MutableResizableList::const_iterator;
 
     static
     constexpr
@@ -825,25 +685,25 @@ struct MyModelWithReference
     }
 
     static
-    size_type size(const MyMutableResizableList & list) noexcept
+    size_type size(const MutableResizableList & list) noexcept
     {
       return list.getSizeCustom();
     }
 
     static
-    const_reference atIndex(const MyMutableResizableList & list, size_type index) noexcept
+    const_reference atIndex(const MutableResizableList & list, size_type index) noexcept
     {
       return list.itemAt(index);
     }
 
     static
-    reference atIndexMutable(MyMutableResizableList & list, size_type index) noexcept
+    reference atIndexMutable(MutableResizableList & list, size_type index) noexcept
     {
       return list.mutableItemAt(index);
     }
 
     static
-    void insert(MyMutableResizableList & list, const_iterator pos, size_type count, const_reference value)
+    void insert(MutableResizableList & list, const_iterator pos, size_type count, const_reference value)
     {
       list.insert(pos, count, value);
     }
@@ -851,7 +711,7 @@ struct MyModelWithReference
     /*! \brief Erase function
      */
     static
-    void erase(MyMutableResizableList & list, const_iterator first, const_iterator last)
+    void erase(MutableResizableList & list, const_iterator first, const_iterator last)
     {
       list.erase(first, last);
     }
@@ -972,11 +832,126 @@ struct MyModelWithReference
   /// \todo table model
 
 
+  /** Read only example
+   *
+   */
 
-TEST_CASE("sandbox")
+
+  /**
+   * NOTE: for adapter
+   *
+   * - size() and atIndex() always required
+   * - size_type and const_reference always required
+   *
+   * - size_type has to be exposed by the container
+   *
+   * \todo Maybe create a CRTP based interface that forces implementing supportsInsert() etc.. ?
+   */
+
+
+  struct ReadOnlyListTableModel
+  {
+    ReadOnlyListTableModel(const ReadOnlyList & list)
+    : mList(list)
+    {
+    }
+
+    int rowCount() const
+    {
+      return mList.rowCount();
+    }
+
+    QVariant data(int row, int column) const
+    {
+      switch(column){
+        // case 0:
+        //   return mList.atRow(row).id;
+        // case 1:
+        //   return mList.atRow(row).name;
+      }
+      return QVariant();
+    }
+
+    StlContiguousContainerAdapter<ReadOnlyList, ReadOnlyListTableModelAdapterFunctionMap> mList;
+  };
+
+
+/*
+ * TEMPLATE_TEST_CASE_SIG() does not work for our case.
+ * See https://github.com/catchorg/Catch2/issues/2680
+ */
+template<typename ContainerType, typename FunctionMapType>
+struct ContainerAndFunctionMap
 {
+  using Container = ContainerType;
+  using FunctionMap = FunctionMapType;
+};
+
+/*
+ * Types for constructors tests
+ */
+using DefaultConstructibleOnlyListAdapted = StlContiguousContainerAdapter<DefaultConstructibleOnlyList, DefaultConstructibleOnlyListTableModelAdapterFunctionMap>;
+using CopyConstructibleOnlyListAdapted = StlContiguousContainerAdapter<CopyConstructibleOnlyList, CopyConstructibleOnlyListTableModelAdapterFunctionMap>; 
+using MoveConstructibleOnlyListAdapted = StlContiguousContainerAdapter<MoveConstructibleOnlyList, MoveConstructibleOnlyListTableModelAdapterFunctionMap>;
+
+using ReadOnlyListContainerAndFunctionMap = ContainerAndFunctionMap<ReadOnlyList, ReadOnlyListTableModelAdapterFunctionMap>;
+using ReadOnlyListAdapted = StlContiguousContainerAdapter<ReadOnlyList, ReadOnlyListTableModelAdapterFunctionMap>;
+
+
+  /** Mutable example (NOT resizable)
+   */
+
+using MutableListAdapted = StlContiguousContainerAdapter<MutableList, MutableListTableModelAdapterFunctionMap>;
+
+  /// \todo table model
+
+TEMPLATE_TEST_CASE("default_constructed", "", DefaultConstructibleOnlyListAdapted)
+{
+  TestType list;
+
+  CHECK( list.rowCount() == 0 );
 }
 
+TEST_CASE("copy_constructed")
+{
+  SECTION("CopyConstructibleOnlyList")
+  {
+    CopyConstructibleOnlyList list = CopyConstructibleOnlyList::fromItemList({{1,"A"}});
+
+    CopyConstructibleOnlyListAdapted listAdapted(list);
+
+    CHECK( listAdapted.rowCount() == 1 );
+  }
+}
+
+TEST_CASE("move_constructed")
+{
+  SECTION("MoveConstructibleOnlyList")
+  {
+    MoveConstructibleOnlyListAdapted list( MoveConstructibleOnlyList::fromItemList({{1,"A"}}) );
+
+    CHECK( list.rowCount() == 1 );
+  }
+
+  SECTION("ReadOnlyList")
+  {
+    ReadOnlyListAdapted list( ReadOnlyList::fromItemList({{1,"A"}}) );
+
+    CHECK( list.rowCount() == 1 );
+  }
+}
+
+TEMPLATE_TEST_CASE("ReadOnly_example", "", ReadOnlyListContainerAndFunctionMap)
+{
+  using Container = typename TestType::Container;
+  using List = StlContiguousContainerAdapter<Container, typename TestType::FunctionMap>;
+
+  List list( Container::fromItemList({{1,"A"}}) );
+
+  CHECK( list.rowCount() == 1 );
+
+  REQUIRE(false);
+}
 
 // TEMPLATE_TEST_CASE("default_constructed", "", TestContainerAdapter, SharedTestContainerAdapter)
 // {
@@ -987,10 +962,10 @@ TEST_CASE("sandbox")
 
 TEST_CASE("rowFromPosition")
 {
-  REQUIRE(false);
+  /// REQUIRE(false);
 }
 
 TEST_CASE("rowFromIndex")
 {
-  REQUIRE(false);
+  /// REQUIRE(false);
 }

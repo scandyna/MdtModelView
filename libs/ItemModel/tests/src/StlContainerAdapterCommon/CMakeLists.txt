@@ -9,6 +9,8 @@ add_library(Mdt_ItemModelStlContainerAdapterTestCommon STATIC
   DefaultConstructibleOnlyListTableModelAdapterFunctionMap.cpp
   CopyConstructibleOnlyListTableModelAdapterFunctionMap.cpp
   MoveConstructibleOnlyListTableModelAdapterFunctionMap.cpp
+  MutableListRawData.cpp
+  MutableListRawDataTableModelAdapterFunctionMap.cpp
   MutableList.cpp
   MutableListTableModelAdapterFunctionMap.cpp
   ReadOnlyResizableList.cpp

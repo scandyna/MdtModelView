@@ -7,12 +7,4 @@
  ** Copyright (C) 2025-2025 Philippe Steinmann.
  **
  *****************************************************************************************/
-#include "MutableList.h"
-
-MutableList MutableList::fromItemList(const std::vector<Item> & itemList) noexcept
-{
-  MutableList list;
-  list.mList = itemList;
-
-  return list;
-}
+#include "MutableListRawDataTableModelAdapterFunctionMap.h"

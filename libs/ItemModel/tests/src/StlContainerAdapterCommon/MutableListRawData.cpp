@@ -7,11 +7,11 @@
  ** Copyright (C) 2025-2025 Philippe Steinmann.
  **
  *****************************************************************************************/
-#include "MutableList.h"
+#include "MutableListRawData.h"
 
-MutableList MutableList::fromItemList(const std::vector<Item> & itemList) noexcept
+MutableListRawData MutableListRawData::fromItemList(const std::vector<Item> & itemList) noexcept
 {
-  MutableList list;
+  MutableListRawData list;
   list.mList = itemList;
 
   return list;

@@ -196,6 +196,187 @@ namespace Mdt{ namespace ItemModel{
    * };
    * \endcode
    *
+   * \section Mdt_ItemModel_StlContiguousContainerAdapter_MutableContainer Use setData() with a mutable container
+   *
+   * While it's probably ok to return a const reference to an element,
+   * for mutation this can be less desirable.
+   * The domain container probably have to limit the access to some attributes,
+   * and maybe also do some work to keep invariance.
+   *
+   * Another approach is to expose some raw data to the editor,
+   * then validate the inputs and finally build a domain object.
+   *
+   * Note that a mutable container also has to provide read access
+   * to be usable in a (table/item) model.
+   *
+   * \subsection Mdt_ItemModel_StlContiguousContainerAdapter_MutableContainer_DirectAccess Direct access to a mutable element
+   *
+   * Example of a list that provides a access to an element for mutation:
+   * \code
+   * class MutableListRawData
+   * {
+   *  public:
+   *
+   *   using size_type = std::vector<Item>::size_type;
+   *
+   *   size_type getSizeCustom() const noexcept;
+   *   const Item & itemAt(size_type index) const noexcept;
+   *
+   *   Item & mutableItemAt(size_type index) noexcept;
+   * };
+   * \endcode
+   *
+   * As for the read only example, we implement a function map:
+   * \code
+   * struct MutableListRawDataTableModelAdapterFunctionMap
+   * {
+   *   using size_type = MutableListRawData::size_type;
+   *   using const_reference = const Item &;
+   *   using reference = Item &;
+   *
+   *   static
+   *   size_type size(const MutableListRawData & list) noexcept
+   *   {
+   *     return list.getSizeCustom();
+   *   }
+   *
+   *   static
+   *   const_reference atIndex(const MutableListRawData & list, size_type index) noexcept
+   *   {
+   *     return list.itemAt(index);
+   *   }
+   *
+   *   static
+   *   reference atIndexMutable(MutableListRawData & list, size_type index) noexcept
+   *   {
+   *     return list.mutableItemAt(index);
+   *   }
+   * };
+   * \endcode
+   *
+   * The function map is similar to the read only example,
+   * but adds the \a reference type and the \a atIndexMutable() function.
+   *
+   * Here is an example for the mutation part of a table model:
+   * \code
+   * class MutableListRawDataTableModel : public Mdt::ItemModel::AbstractTableModel
+   * {
+   *  public:
+   *
+   *   // Constructor omitted
+   *
+   *   Qt::ItemFlags flags(const QModelIndex & index) const override
+   *   {
+   *     if( !indexIsValidAndInRange(index) ){
+   *       return AbstractTableModel::flags(index);
+   *     }
+   *     if( index.column() == 1 ){
+   *       return AbstractTableModel::flags(index) | Qt::ItemIsEditable;
+   *     }
+   *
+   *     return AbstractTableModel::flags(index);
+   *   }
+   *
+   *  private:
+   *
+   *   // Methods identical to the read only example omitted here
+   *
+   *   bool setEditRoleData(const QModelIndex & index, const QVariant & value) override
+   *   {
+   *     assert( indexIsValidAndInRange(index) );
+   *
+   *     switch( index.column() ){
+   *       case 1:
+   *         mList.atRowMutable( index.row() ).setName( value.toString() );
+   *         return true;
+   *     }
+   *
+   *     return false;
+   *   }
+   *
+   *   Mdt::ItemModel::StlContiguousContainerAdapter<MutableListRawData, MutableListRawDataTableModelAdapterFunctionMap> mList;
+   * };
+   * \endcode
+   *
+   * \subsection Mdt_ItemModel_StlContiguousContainerAdapter_MutableContainer_UseDomainMethods Use domain methods for mutation
+   *
+   * Example of a list that provides domain methods to update some attributes (not all):
+   * \code
+   * class MutableList
+   * {
+   *  public:
+   *
+   *   using size_type = std::vector<Item>::size_type;
+   *
+   *   size_type getSizeCustom() const noexcept;
+   *   const Item & itemAt(size_type index) const noexcept;
+   *
+   *   void setNameAt(size_type index, const QString & name);
+   * };
+   * \endcode
+   *
+   * As above, we implement a function map:
+   * \code
+   * struct MutableListTableModelAdapterFunctionMap
+   * {
+   *   using size_type = MutableList::size_type;
+   *   using const_reference = const Item &;
+   *
+   *   static
+   *   size_type size(const MutableList & list) noexcept
+   *   {
+   *     return list.getSizeCustom();
+   *   }
+   *
+   *   static
+   *   const_reference atIndex(const MutableList & list, size_type index) noexcept
+   *   {
+   *     return list.itemAt(index);
+   *   }
+   *
+   * };
+   * \endcode
+   *
+   * Notice that we not provide \a reference and \a atRowMutable() anymore.
+   *
+   * Here is an example for the mutation part of a table model:
+   * \code
+   * class MutableListTableModel : public Mdt::ItemModel::AbstractTableModel
+   * {
+   *  public:
+   *
+   *   // Constructor omitted
+   *
+   *   // flags() method omitted
+   *
+   *  private:
+   *
+   *   // Methods identical to the read only example omitted here
+   *
+   *   bool setEditRoleData(const QModelIndex & index, const QVariant & value) override
+   *   {
+   *     assert( indexIsValidAndInRange(index) );
+   *
+   *     const size_type containerIndex = mList.indexFromRow( index.row() );
+   *
+   *     switch( index.column() ){
+   *       case 1:
+   *         mList.containerMutable().setNameAt( containerIndex, value.toString() );
+   *         return true;
+   *     }
+   *
+   *     return false;
+   *   }
+   *
+   *   Mdt::ItemModel::StlContiguousContainerAdapter<MutableList, MutableListTableModelAdapterFunctionMap> mList;
+   * };
+   * \endcode
+   *
+   * \section Mdt_ItemModel_StlContiguousContainerAdapter_ReadOnlyResizableList Read only resizable container example
+   *
+   * \todo rowFromIndex()
+   * \todo indexFromRow()
+   *
    * \todo Document the following examples with AbstractTableModel
    *
    * \todo document minimal requirements on the container.
@@ -485,6 +666,13 @@ namespace Mdt{ namespace ItemModel{
      */
     using const_reference = typename FunctionMap::const_reference;
 
+    /*! \brief STL reference
+     *
+     * Will be FunctionMap::reference if \a FunctionMap defines it,
+     * otherwise void.
+     */
+    using reference = Mdt::TypeTraits::member_reference_or_void<FunctionMap>;
+
     /*! \brief Construct an adapter with a default constructed container
      */
     explicit
@@ -512,30 +700,67 @@ namespace Mdt{ namespace ItemModel{
      */
     int rowCount() const
     {
-      // assert( Mdt::Numeric::int_canHoldValueOf_size_t( FunctionMap::size(mContainer) ) );
       assert( Mdt::Numeric::int_canHoldValueOf_T( FunctionMap::size(mContainer) ) );
 
-      // return Mdt::Numeric::int_from_size_t( FunctionMap::size(mContainer) );
       return Mdt::Numeric::int_from_T( FunctionMap::size(mContainer) );
     }
 
-    /*! \brief Get the count of elements
-     */
-    // int size() const noexcept
-    // {
-    //   assert( Mdt::Numeric::int_canHoldValueOf_size_t( mContainer.size() ) );
-    //
-    //   return Mdt::Numeric::int_from_size_t( mContainer.size() );
-    // }
-
-    // bool isEmpty()
-
-    /*! \brief
+    /*! \brief Get the element at given row
      *
-     * \todo preconditions
+     * \pre \a row must be in range of the container ( 0 >= \a row < rowCount() )
      */
-    const_reference at(int index) const
+    const_reference atRow(int row) const
     {
+      assert( row >= 0 );
+      assert( row < rowCount() );
+
+      /*
+       * row is in the range of the container,
+       * it is also in the range of size_type
+       */
+      /// size_type index = static_cast<size_type>(row);
+
+      return FunctionMap::atIndex( mContainer, indexFromRow(row) );
+    }
+
+    /*! \brief Access the element at given row for mutation
+     *
+     * \pre the reference type must be valid.
+     * \pre \a row must be in range ( 0 >= \a row < rowCount() )
+     */
+    // template<typename ReferenceType>
+    reference atRowMutable(int row) noexcept
+    {
+      static_assert( !std::is_void_v<reference>, "call StlContiguousContainerAdapter::atRowMutable() requires FunctionMap::reference to be defined" );
+      assert( row >= 0 );
+      assert( row < rowCount() );
+
+      return FunctionMap::atIndexMutable( mContainer, indexFromRow(row) );
+    }
+
+    /// \todo For return reference (can be void), can auto help ?
+
+    /*! \brief Get the size_type index from given row
+     *
+     * \pre \a row must be in range of the container ( 0 >= \a row < rowCount() )
+     */
+    size_type indexFromRow(int row) const
+    {
+      assert( row >= 0 );
+      assert( row < rowCount() );
+
+      /*
+       * row is in the range of the container,
+       * it is also in the range of size_type
+       */
+      return static_cast<size_type>(row);
+    }
+
+    /*! \brief Access the container for mutation
+     */
+    Container & containerMutable() noexcept
+    {
+      return mContainer;
     }
 
    private:

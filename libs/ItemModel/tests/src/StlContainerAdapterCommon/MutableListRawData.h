@@ -7,13 +7,13 @@
  ** Copyright (C) 2025-2025 Philippe Steinmann.
  **
  *****************************************************************************************/
-#ifndef MUTABLE_LIST_H
-#define MUTABLE_LIST_H
+#ifndef MUTABLE_LIST_RAW_DATA_H
+#define MUTABLE_LIST_RAW_DATA_H
 
 #include "Item.h"
 #include <vector>
 
-class MutableList
+class MutableListRawData
 {
  public:
 
@@ -29,17 +29,17 @@ class MutableList
     return mList.at(index);
   }
 
-  void setNameAt(size_type index, const QString & name)
+  Item & mutableItemAt(size_type index) noexcept
   {
-    mList.at(index).name = name;
+    return mList.at(index);
   }
 
   static
-  MutableList fromItemList(const std::vector<Item> & itemList) noexcept;
+  MutableListRawData fromItemList(const std::vector<Item> & itemList) noexcept;
 
  private:
 
   std::vector<Item> mList;
 };
 
-#endif // #ifndef MUTABLE_LIST_H
+#endif // #ifndef MUTABLE_LIST_RAW_DATA_H

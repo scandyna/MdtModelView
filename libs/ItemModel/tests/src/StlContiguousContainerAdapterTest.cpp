@@ -23,6 +23,8 @@
 #include "CopyConstructibleOnlyListTableModelAdapterFunctionMap.h"
 #include "MoveConstructibleOnlyListTableModelAdapterFunctionMap.h"
 #include "MutableList.h"
+#include "MutableListRawDataTableModelAdapterFunctionMap.h"
+#include "MutableList.h"
 #include "MutableListTableModelAdapterFunctionMap.h"
 #include "ReadOnlyResizableList.h"
 #include "ReadOnlyResizableListTableModelAdapterFunctionMap.h"
@@ -901,6 +903,7 @@ using ReadOnlyListAdapted = StlContiguousContainerAdapter<ReadOnlyList, ReadOnly
   /** Mutable example (NOT resizable)
    */
 
+using MutableListRawDataAdapted = StlContiguousContainerAdapter<MutableListRawData, MutableListRawDataTableModelAdapterFunctionMap>;
 using MutableListAdapted = StlContiguousContainerAdapter<MutableList, MutableListTableModelAdapterFunctionMap>;
 
   /// \todo table model
@@ -941,24 +944,13 @@ TEST_CASE("move_constructed")
   }
 }
 
-TEMPLATE_TEST_CASE("ReadOnly_example", "", ReadOnlyListContainerAndFunctionMap)
+TEST_CASE("indexFromRow")
 {
-  using Container = typename TestType::Container;
-  using List = StlContiguousContainerAdapter<Container, typename TestType::FunctionMap>;
+  ReadOnlyListAdapted list( ReadOnlyList::fromItemList({{1,"A"}}) );
+  REQUIRE( list.rowCount() == 1 );
 
-  List list( Container::fromItemList({{1,"A"}}) );
-
-  CHECK( list.rowCount() == 1 );
-
-  REQUIRE(false);
+  CHECK( list.indexFromRow(0) == 0 );
 }
-
-// TEMPLATE_TEST_CASE("default_constructed", "", TestContainerAdapter, SharedTestContainerAdapter)
-// {
-//   TestType container;
-// 
-//   CHECK( container.size() == 0 );
-// }
 
 TEST_CASE("rowFromPosition")
 {
@@ -969,3 +961,44 @@ TEST_CASE("rowFromIndex")
 {
   /// REQUIRE(false);
 }
+
+TEMPLATE_TEST_CASE("ReadOnly_example", "", ReadOnlyListContainerAndFunctionMap)
+{
+  using Container = typename TestType::Container;
+  using List = StlContiguousContainerAdapter<Container, typename TestType::FunctionMap>;
+
+  List list( Container::fromItemList({{1,"A"}}) );
+
+  CHECK( list.rowCount() == 1 );
+  CHECK( list.atRow(0).id == 1 );
+}
+
+TEST_CASE("MutableListRawData_example")
+{
+  MutableListRawDataAdapted list( MutableListRawData::fromItemList({{1,"A"}}) );
+  REQUIRE( list.rowCount() == 1 );
+  REQUIRE( list.atRow(0).name == "A" );
+
+  list.atRowMutable(0).name = "B";
+
+  CHECK( list.atRow(0).name == "B" );
+}
+
+TEST_CASE("MutableList_DomainMethods_example")
+{
+  MutableListAdapted list( MutableList::fromItemList({{1,"A"}}) );
+  REQUIRE( list.rowCount() == 1 );
+  REQUIRE( list.atRow(0).name == "A" );
+
+  const MutableList::size_type containerIndex = list.indexFromRow(0);
+  list.containerMutable().setNameAt(containerIndex, "C");
+
+  CHECK( list.atRow(0).name == "C" );
+}
+
+// TEMPLATE_TEST_CASE("default_constructed", "", TestContainerAdapter, SharedTestContainerAdapter)
+// {
+//   TestType container;
+// 
+//   CHECK( container.size() == 0 );
+// }

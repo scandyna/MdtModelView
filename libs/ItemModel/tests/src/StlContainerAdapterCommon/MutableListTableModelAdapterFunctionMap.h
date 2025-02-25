@@ -16,7 +16,6 @@ struct MutableListTableModelAdapterFunctionMap
 {
   using size_type = MutableList::size_type;
   using const_reference = const Item &;
-  using reference = Item &;
 
   static
   size_type size(const MutableList & list) noexcept
@@ -28,12 +27,6 @@ struct MutableListTableModelAdapterFunctionMap
   const_reference atIndex(const MutableList & list, size_type index) noexcept
   {
     return list.itemAt(index);
-  }
-
-  static
-  reference atIndexMutable(MutableList & list, size_type index) noexcept
-  {
-    return list.mutableItemAt(index);
   }
 };
 

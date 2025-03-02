@@ -372,7 +372,245 @@ namespace Mdt{ namespace ItemModel{
    * };
    * \endcode
    *
-   * \section Mdt_ItemModel_StlContiguousContainerAdapter_ReadOnlyResizableList Read only resizable container example
+   * \section Mdt_ItemModel_StlContiguousContainerAdapter_ResizableContainers Resizable container examples
+   *
+   * Some containers supports inserting elements at any place.
+   * This maps to Qt model insertRows().
+   *
+   * Some containers only provides methods like push_back().
+   *
+   * \subsection Mdt_ItemModel_StlContiguousContainerAdapter_ResizableContainers_Insert Container that provides insert()
+   *
+   * Example of a container that provides insert:
+   * \code
+   * class ListWithInsert
+   * {
+   *  public:
+   *
+   *   using size_type = std::vector<Item>::size_type;
+   *   using const_iterator = std::vector<Item>::const_iterator;
+   *
+   *   size_type getSizeCustom() const noexcept;
+   *   const Item & itemAt(size_type index) const noexcept;
+   *
+   *   void insert(const_iterator pos, size_type count, const Item & item);
+   * };
+   * \endcode
+   *
+   * Here is the implementation of the function map:
+   * \code
+   * struct ListWithInsertTableModelAdapterFunctionMap
+   * {
+   *   using size_type = ListWithInsert::size_type;
+   *   using const_reference = const Item &;
+   *   using const_iterator = ListWithInsert::const_iterator;
+   *
+   *   static
+   *   size_type size(const ListWithInsert & list) noexcept
+   *   {
+   *     return list.getSizeCustom();
+   *   }
+   *
+   *   static
+   *   const_reference atIndex(const ListWithInsert & list, size_type index) noexcept
+   *   {
+   *     return list.itemAt(index);
+   *   }
+   *
+   *   static
+   *   void insert(ListWithInsert & list, const_iterator pos, size_type count, const_reference item)
+   *   {
+   *     list.insert(pos, count, item);
+   *   }
+   * };
+   * \endcode
+   *
+   * Here is an example for the insert part of a table model:
+   * \code
+   * class ListWithInsertTableModel : public Mdt::ItemModel::AbstractTableModel
+   * {
+   *  public:
+   *
+   *   // Constructor omitted
+   *
+   *  private:
+   *
+   *   // Methods identical to the read only example omitted here
+   *
+   *   bool doSupportsInsertRows() const noexcept override
+   *   {
+   *     return true;
+   *   }
+   *
+   *   void doInsertRows(int row, int count) override
+   *   {
+   *     assert( rowAndCountIsValidForInsertRows(row, count) );
+   *
+   *     mList.insertRows( row, count, Item() );
+   *   }
+   *
+   *   Mdt::ItemModel::StlContiguousContainerAdapter<ListWithInsert, ListWithInsertTableModelAdapterFunctionMap> mList;
+   * };
+   * \endcode
+   *
+   * \subsection Mdt_ItemModel_StlContiguousContainerAdapter_ResizableContainers_PushBack Container that provides push_back() or similar
+   *
+   * Example of a container that provides append:
+   * \code
+   * class ListWithAppend
+   * {
+   *  public:
+   *
+   *   using size_type = std::vector<Item>::size_type;
+   *
+   *   size_type getSizeCustom() const noexcept;
+   *   const Item & itemAt(size_type index) const noexcept;
+   *
+   *   void append(const Item & item) noexcept;
+   * };
+   * \endcode
+   *
+   * Here is the implementation of the function map:
+   * \code
+   * struct ListWithAppendTableModelAdapterFunctionMap
+   * {
+   *   using size_type = ListWithAppend::size_type;
+   *   using const_reference = const Item &;
+   *
+   *   static
+   *   size_type size(const ListWithAppend & list) noexcept
+   *   {
+   *     return list.getSizeCustom();
+   *   }
+   *
+   *   static
+   *   const_reference atIndex(const ListWithAppend & list, size_type index) noexcept
+   *   {
+   *     return list.itemAt(index);
+   *   }
+   *
+   *   static
+   *   void push_back(ListWithAppend & list, const_reference item) noexcept
+   *   {
+   *     list.append(item);
+   *   }
+   * };
+   * \endcode
+   *
+   * Here is an example for the append part of a table model:
+   * \code
+   * class ListWithAppendTableModel : public Mdt::ItemModel::AbstractTableModel
+   * {
+   *  public:
+   *
+   *   // Constructor omitted
+   *
+   *  private:
+   *
+   *   // Methods identical to the read only example omitted here
+   *
+   *   bool doSupportsAppendRow() const noexcept override
+   *   {
+   *     return true;
+   *   }
+   *
+   *   void doAppendRow() override
+   *   {
+   *     mList.appendRow( Item() );
+   *   }
+   *
+   *   Mdt::ItemModel::StlContiguousContainerAdapter<ListWithAppend, ListWithAppendTableModelAdapterFunctionMap> mList;
+   * };
+   * \endcode
+   *
+   * \subsection Mdt_ItemModel_StlContiguousContainerAdapter_ResizableContainers_Erase Remove elements with erase()
+   *
+   * Example of a container that provides erase:
+   * \code
+   * class ListWithErase
+   * {
+   *  public:
+   *
+   *   using size_type = std::vector<Item>::size_type;
+   *   using difference_type = std::vector<Item>::difference_type;
+   *   using const_iterator = std::vector<Item>::const_iterator;
+   *
+   *   size_type getSizeCustom() const noexcept;
+   *   const Item & itemAt(size_type index) const noexcept;
+   *
+   *   void erase(const_iterator first, const_iterator last);
+   *
+   *   const_iterator cbegin() const noexcept;
+   *   const_iterator cend() const noexcept;
+   * };
+   * \endcode
+   *
+   * Here is the implementation of the function map:
+   * \code
+   * struct ListWithEraseTableModelAdapterFunctionMap
+   * {
+   *   using size_type = ListWithErase::size_type;
+   *   using const_reference = const Item &;
+   *   using difference_type = ListWithErase::difference_type;
+   *   using const_iterator = ListWithErase::const_iterator;
+   *
+   *   static
+   *   size_type size(const ListWithErase & list) noexcept
+   *   {
+   *     return list.getSizeCustom();
+   *   }
+   *
+   *   static
+   *   const_reference atIndex(const ListWithErase & list, size_type index) noexcept
+   *   {
+   *     return list.itemAt(index);
+   *   }
+   *
+   *   static
+   *   void erase(ListWithErase & list, const_iterator first, const_iterator last) noexcept
+   *   {
+   *     list.erase(first, last);
+   *   }
+   *
+   *   static
+   *   const_iterator begin(const ListWithErase & list) noexcept
+   *   {
+   *     return list.cbegin();
+   *   }
+   * };
+   * \endcode
+   *
+   * Here is an example for the remove rows part of a table model:
+   * \code
+   * class ListWithEraseTableModel : public Mdt::ItemModel::AbstractTableModel
+   * {
+   *  public:
+   *
+   *   // Constructor omitted
+   *
+   *  private:
+   *
+   *   // Methods identical to the read only example omitted here
+   *
+   *   bool doSupportsRemoveRows() const noexcept override
+   *   {
+   *     return true;
+   *   }
+   *
+   *   void doRemoveRows(int row, int count) override
+   *   {
+   *     assert( rowAndCountIsValidForRemoveRows(row, count) );
+   *
+   *     mList.removeRows(row, count);
+   *   }
+   *
+   *   Mdt::ItemModel::StlContiguousContainerAdapter<ListWithErase, ListWithEraseTableModelAdapterFunctionMap> mList;
+   * };
+   * \endcode
+   *
+   * \subsection Mdt_ItemModel_StlContiguousContainerAdapter_ResizableContainers_RemoveAt Remove an element at a given index
+   *
+   * \todo Document + implement or remove
    *
    * \todo rowFromIndex()
    * \todo indexFromRow()
@@ -383,6 +621,8 @@ namespace Mdt{ namespace ItemModel{
    * For types, size_type and const_reference .
    *
    * \todo example with a container that provides all requirements, like std::vector, or one with less than vector, but all for this adapter
+   *
+   * \todo example with vector: fast way to implement container for tests
    *
    * \todo Discuss default constructed:
    * - Should it exist in adapter ? Yes
@@ -658,6 +898,13 @@ namespace Mdt{ namespace ItemModel{
      */
     using size_type = typename FunctionMap::size_type;
 
+    /*! \brief STL difference_type
+     *
+     * Will be FunctionMap::difference_type if \a FunctionMap defines it,
+     * otherwise void.
+     */
+    using difference_type = Mdt::TypeTraits::member_difference_type_or_void<FunctionMap>;
+
     /*! \brief STL const_reference
      *
      * Will be FunctionMap::const_reference
@@ -672,6 +919,13 @@ namespace Mdt{ namespace ItemModel{
      * otherwise void.
      */
     using reference = Mdt::TypeTraits::member_reference_or_void<FunctionMap>;
+
+    /*! \brief STL const_iterator
+     *
+     * Will be FunctionMap::const_iterator if \a FunctionMap defines it,
+     * otherwise void.
+     */
+    using const_iterator = Mdt::TypeTraits::member_const_iterator_or_void<FunctionMap>;
 
     /*! \brief Construct an adapter with a default constructed container
      */
@@ -714,12 +968,6 @@ namespace Mdt{ namespace ItemModel{
       assert( row >= 0 );
       assert( row < rowCount() );
 
-      /*
-       * row is in the range of the container,
-       * it is also in the range of size_type
-       */
-      /// size_type index = static_cast<size_type>(row);
-
       return FunctionMap::atIndex( mContainer, indexFromRow(row) );
     }
 
@@ -728,7 +976,6 @@ namespace Mdt{ namespace ItemModel{
      * \pre the reference type must be valid.
      * \pre \a row must be in range ( 0 >= \a row < rowCount() )
      */
-    // template<typename ReferenceType>
     reference atRowMutable(int row) noexcept
     {
       static_assert( !std::is_void_v<reference>, "call StlContiguousContainerAdapter::atRowMutable() requires FunctionMap::reference to be defined" );
@@ -739,6 +986,74 @@ namespace Mdt{ namespace ItemModel{
     }
 
     /// \todo For return reference (can be void), can auto help ?
+
+    /*! \brief Inserts count rows into the container before the given row
+     *
+     * \todo precondition: the container must be able to store row + count
+     *
+     * \todo static preconditions like in test
+     *
+     * \todo should return void
+     *
+     * To use this method, the function map must have an insert function of this form:
+     * \code
+     * static
+     * void insert(Container & container, const_iterator pos, size_type count, const_reference value);
+     * \endcode
+     *
+     * \pre \a row must be >= 0
+     * \pre \a row must be <= rowCount()
+     * \pre \a count must be >= 1
+     */
+    bool insertRows(int row, int count, const_reference value)
+    {
+      return false;
+    }
+
+    /*! \brief Append an element
+     *
+     * \todo precondition: the container must be able to store another element
+     *
+     * To use this method, the function map must have a push_back function of this form:
+     * \code
+     * static
+     * void push_back(Container & container, const_reference value);
+     * \endcode
+     */
+    void appendRow(const_reference value)
+    {
+      FunctionMap::push_back(mContainer, value);
+    }
+
+    /*! \brief Removes count rows starting with the given row
+     *
+     * To use this method, the function map must have an erase function of this form:
+     * \code
+     * static
+     * void erase(Container & container, const_iterator first, const_iterator last);
+     * \endcode
+     *
+     * To define first and last, a const-qualified begin is also required:
+     * \code
+     * static
+     * const_iterator begin(const Container & container) const noexcept;
+     * \endcode
+     *
+     * \pre FunctionMap::difference_type must be defined
+     * \pre FunctionMap::const_iterator must be defined
+     * \pre \a row must be >= 0
+     * \pre \a count must be >= 1
+     * \pre ( \a row + \a count ) must be <= rowCount()
+     */
+    void removeRows(int row, int count)
+    {
+      static_assert( !std::is_void_v<difference_type>, "call StlContiguousContainerAdapter::removeRows() requires FunctionMap::difference_type to be defined" );
+      static_assert( !std::is_void_v<const_iterator>, "call StlContiguousContainerAdapter::removeRows() requires FunctionMap::const_iterator to be defined" );
+      assert( row >= 0 );
+      assert( count >= 1 );
+      assert( (row + count) <= rowCount() );
+
+    }
 
     /*! \brief Get the size_type index from given row
      *

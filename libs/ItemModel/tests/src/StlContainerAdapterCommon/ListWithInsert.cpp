@@ -7,4 +7,4 @@
  ** Copyright (C) 2025-2025 Philippe Steinmann.
  **
  *****************************************************************************************/
-#include "ReadOnlyResizableListTableModelAdapterFunctionMap.h"
+#include "ListWithInsert.h"

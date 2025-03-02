@@ -13,8 +13,12 @@ add_library(Mdt_ItemModelStlContainerAdapterTestCommon STATIC
   MutableListRawDataTableModelAdapterFunctionMap.cpp
   MutableList.cpp
   MutableListTableModelAdapterFunctionMap.cpp
-  ReadOnlyResizableList.cpp
-  ReadOnlyResizableListTableModelAdapterFunctionMap.cpp
+  ListWithInsert.cpp
+  ListWithInsertTableModelAdapterFunctionMap.cpp
+  ListWithAppend.cpp
+  ListWithAppendTableModelAdapterFunctionMap.cpp
+  ListWithErase.cpp
+  ListWithEraseTableModelAdapterFunctionMap.cpp
 )
 add_library(Mdt::ItemModelStlContainerAdapterTestCommon ALIAS Mdt_ItemModelStlContainerAdapterTestCommon)
 

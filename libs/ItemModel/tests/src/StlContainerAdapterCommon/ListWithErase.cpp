@@ -7,11 +7,12 @@
  ** Copyright (C) 2025-2025 Philippe Steinmann.
  **
  *****************************************************************************************/
-#ifndef READ_ONLY_RESIZABLE_LIST_H
-#define READ_ONLY_RESIZABLE_LIST_H
+#include "ListWithErase.h"
 
-#include "Item.h"
-#include <vector>
+ListWithErase ListWithErase::fromItemList(const std::vector<Item> & itemList) noexcept
+{
+  ListWithErase list;
+  list.mList = itemList;
 
-
-#endif // #ifndef READ_ONLY_RESIZABLE_LIST_H
+  return list;
+}

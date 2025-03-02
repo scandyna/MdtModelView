@@ -26,8 +26,12 @@
 #include "MutableListRawDataTableModelAdapterFunctionMap.h"
 #include "MutableList.h"
 #include "MutableListTableModelAdapterFunctionMap.h"
-#include "ReadOnlyResizableList.h"
-#include "ReadOnlyResizableListTableModelAdapterFunctionMap.h"
+#include "ListWithInsert.h"
+#include "ListWithInsertTableModelAdapterFunctionMap.h"
+#include "ListWithAppend.h"
+#include "ListWithAppendTableModelAdapterFunctionMap.h"
+#include "ListWithErase.h"
+#include "ListWithEraseTableModelAdapterFunctionMap.h"
 
 #include "Mdt/ItemModel/SharedStlContiguousContainerAdapter.h"
 
@@ -519,6 +523,14 @@ struct MyModelWithReference
 
 
 
+  /** List that provides insert
+   */
+
+
+
+  /** List that provides append
+   */
+
 
   /** Read only and resizable example
    *
@@ -906,6 +918,11 @@ using ReadOnlyListAdapted = StlContiguousContainerAdapter<ReadOnlyList, ReadOnly
 using MutableListRawDataAdapted = StlContiguousContainerAdapter<MutableListRawData, MutableListRawDataTableModelAdapterFunctionMap>;
 using MutableListAdapted = StlContiguousContainerAdapter<MutableList, MutableListTableModelAdapterFunctionMap>;
 
+using ListWithInsertAdapted = StlContiguousContainerAdapter<ListWithInsert, ListWithInsertTableModelAdapterFunctionMap>;
+using ListWithAppendAdapted = StlContiguousContainerAdapter<ListWithAppend, ListWithAppendTableModelAdapterFunctionMap>;
+
+using ListWithEraseAdapted = StlContiguousContainerAdapter<ListWithErase, ListWithEraseTableModelAdapterFunctionMap>;
+
   /// \todo table model
 
 TEMPLATE_TEST_CASE("default_constructed", "", DefaultConstructibleOnlyListAdapted)
@@ -994,6 +1011,37 @@ TEST_CASE("MutableList_DomainMethods_example")
   list.containerMutable().setNameAt(containerIndex, "C");
 
   CHECK( list.atRow(0).name == "C" );
+}
+
+TEST_CASE("ListWithInsert_example")
+{
+  ListWithInsertAdapted list;
+  REQUIRE( list.rowCount() == 0 );
+
+  REQUIRE( list.insertRows( 0, 1, Item() ) );
+
+  CHECK( list.rowCount() == 1 );
+}
+
+TEST_CASE("ListWithAppend_example")
+{
+  ListWithAppendAdapted list;
+  REQUIRE( list.rowCount() == 0 );
+
+  list.appendRow( Item() );
+
+  CHECK( list.rowCount() == 1 );
+}
+
+TEST_CASE("ListWithErase_example")
+{
+  ListWithEraseAdapted list( ListWithErase::fromItemList({{1,"A"}}) );
+  REQUIRE( list.rowCount() == 1 );
+  REQUIRE( list.atRow(0).name == "A" );
+
+  list.removeRows(0, 1);
+
+  CHECK( list.rowCount() == 0 );
 }
 
 // TEMPLATE_TEST_CASE("default_constructed", "", TestContainerAdapter, SharedTestContainerAdapter)

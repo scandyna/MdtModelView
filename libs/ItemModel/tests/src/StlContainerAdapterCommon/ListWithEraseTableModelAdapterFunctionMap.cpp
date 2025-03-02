@@ -7,9 +7,4 @@
  ** Copyright (C) 2025-2025 Philippe Steinmann.
  **
  *****************************************************************************************/
-#ifndef READ_ONLY_RESIZABLE_LIST_TABLE_MODEL_ADAPTER_FUNCTION_MAP_H
-#define READ_ONLY_RESIZABLE_LIST_TABLE_MODEL_ADAPTER_FUNCTION_MAP_H
-
-#include "ReadOnlyResizableList.h"
-
-#endif // #ifndef READ_ONLY_RESIZABLE_LIST_TABLE_MODEL_ADAPTER_FUNCTION_MAP_H
+#include "ListWithEraseTableModelAdapterFunctionMap.h"

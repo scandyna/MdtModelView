@@ -38,7 +38,7 @@ struct ListWithEraseTableModelAdapterFunctionMap
   }
 
   static
-  const_iterator begin(const ListWithErase & list) noexcept
+  const_iterator cbegin(const ListWithErase & list) noexcept
   {
     return list.cbegin();
   }

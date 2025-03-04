@@ -139,98 +139,6 @@ using namespace Mdt::ItemModel;
 
   };
 
-  /*! \brief STL ContiguousContainer function map for STL adapters
-   *
-   * \todo Can we relax to SequenceContainer ?
-   * - https://en.cppreference.com/w/cpp/named_req/SequenceContainer
-   * - https://en.cppreference.com/w/cpp/named_req/ContiguousContainer
-   *
-   * \todo Maybe TypeMap not required ?
-   *
-   * \todo Maybe inheritance like iterators ?
-   *
-   * \sa https://en.cppreference.com/w/cpp/named_req/ContiguousContainer
-   */
-  template< typename Container, typename TypeMap = StlContiguousContainerTypeMap<Container> >
-  struct StlContiguousContainerFunctionMap
-  {
-    /*! \brief STL size_type
-     */
-    using size_type = typename TypeMap::size_type;
-
-    /*! \brief STL difference_type
-     */
-    using difference_type = typename TypeMap::difference_type;
-
-    /*! \brief STL const_reference
-     */
-    using const_reference = typename TypeMap::const_reference;
-
-    /*! \brief STL const_iterator
-     */
-    using const_iterator = typename TypeMap::const_iterator;
-
-    /*! \brief Check if const_iterator is provided
-     *
-     * Returns true,
-     * because const_iterator, cbegin() and cend() are provided
-     * by an STL conform ContiguousContainer .
-     *
-     * \todo remove
-     */
-    static
-    constexpr
-    bool providesConstIterator() noexcept
-    {
-      return true;
-    }
-
-    /*! \brief Check if insert() is supported
-     *
-     * Returns true
-     */
-    static
-    constexpr
-    bool supportsInsert() noexcept
-    {
-      return true;
-    }
-
-    /*! \brief Check if erase() is supported
-     *
-     * Returns true
-     */
-    static
-    constexpr
-    bool supportsErase() noexcept
-    {
-      return true;
-    }
-
-    /*! \brief
-     */
-    static
-    const_iterator cbegin(const Container & container)
-    {
-      return container.cbegin();
-    }
-
-    /*! \brief insert function
-     */
-    static
-    void insert(Container & container, const_iterator pos, size_type count, const_reference value)
-    {
-      container.insert(pos, count, value);
-    }
-
-    /*! \brief Erase function
-     */
-    static
-    void erase(Container & container, const_iterator first, const_iterator last)
-    {
-      container.erase(first, last);
-    }
-  };
 
 namespace Impl{
 
@@ -1018,7 +926,7 @@ TEST_CASE("ListWithInsert_example")
   ListWithInsertAdapted list;
   REQUIRE( list.rowCount() == 0 );
 
-  REQUIRE( list.insertRows( 0, 1, Item() ) );
+  list.insertRows( 0, 1, Item() );
 
   CHECK( list.rowCount() == 1 );
 }

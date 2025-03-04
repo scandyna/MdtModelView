@@ -18,6 +18,7 @@ class ListWithInsert
  public:
 
   using size_type = std::vector<Item>::size_type;
+  using difference_type = std::vector<Item>::difference_type;
   using const_iterator = std::vector<Item>::const_iterator;
 
   size_type getSizeCustom() const noexcept
@@ -32,6 +33,17 @@ class ListWithInsert
 
   void insert(const_iterator pos, size_type count, const Item & item)
   {
+    mList.insert(pos, count, item);
+  }
+
+  const_iterator cbegin() const noexcept
+  {
+    return mList.cbegin();
+  }
+
+  const_iterator cend() const noexcept
+  {
+    return mList.cend();
   }
 
  private:

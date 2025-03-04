@@ -11,6 +11,7 @@
 #define MDT_ITEM_MODEL_STL_CONTIGUOUS_CONTAINER_ADAPTER_H
 
 #include "Mdt/TypeTraits/StlContainerHelpers.h"
+#include "Mdt/ItemModel/StlHelpers.h"
 #include <Mdt/Numeric/Limits.h>
 #include <Mdt/Numeric/BasicConversion.h>
 #include <type_traits>
@@ -388,12 +389,16 @@ namespace Mdt{ namespace ItemModel{
    *  public:
    *
    *   using size_type = std::vector<Item>::size_type;
+   *   using difference_type = std::vector<Item>::difference_type;
    *   using const_iterator = std::vector<Item>::const_iterator;
    *
    *   size_type getSizeCustom() const noexcept;
    *   const Item & itemAt(size_type index) const noexcept;
    *
    *   void insert(const_iterator pos, size_type count, const Item & item);
+   *
+   *   const_iterator cbegin() const noexcept;
+   *   const_iterator cend() const noexcept;
    * };
    * \endcode
    *
@@ -403,6 +408,7 @@ namespace Mdt{ namespace ItemModel{
    * {
    *   using size_type = ListWithInsert::size_type;
    *   using const_reference = const Item &;
+   *   using difference_type = ListWithInsert::difference_type;
    *   using const_iterator = ListWithInsert::const_iterator;
    *
    *   static
@@ -421,6 +427,12 @@ namespace Mdt{ namespace ItemModel{
    *   void insert(ListWithInsert & list, const_iterator pos, size_type count, const_reference item)
    *   {
    *     list.insert(pos, count, item);
+   *   }
+   *
+   *   static
+   *   const_iterator cbegin(const ListWithInsert & list) noexcept
+   *   {
+   *     return list.cbegin();
    *   }
    * };
    * \endcode
@@ -573,7 +585,7 @@ namespace Mdt{ namespace ItemModel{
    *   }
    *
    *   static
-   *   const_iterator begin(const ListWithErase & list) noexcept
+   *   const_iterator cbegin(const ListWithErase & list) noexcept
    *   {
    *     return list.cbegin();
    *   }
@@ -611,6 +623,104 @@ namespace Mdt{ namespace ItemModel{
    * \subsection Mdt_ItemModel_StlContiguousContainerAdapter_ResizableContainers_RemoveAt Remove an element at a given index
    *
    * \todo Document + implement or remove
+   *
+   * \section Mdt_ItemModel_StlContiguousContainerAdapter_UseStlConformContainer Use STL conform container
+   *
+   * If the container provides all the required types and methods for this adapter,
+   * StlContiguousContainerFunctionMap can be used:
+   * \code
+   * class StdVectorTableModel : public Mdt::ItemModel::AbstractTableModel
+   * {
+   *  public:
+   *
+   *   using List = std::vector<Item>;
+   *
+   *   StdVectorTableModel(const List & list, QObject *parent = nullptr)
+   *    : AbstractTableModel(parent),
+   *      mList(list)
+   *   {
+   *   }
+   *
+   *   Qt::ItemFlags flags(const QModelIndex & index) const override
+   *   {
+   *     if( !indexIsValidAndInRange(index) ){
+   *       return AbstractTableModel::flags(index);
+   *     }
+   *     if( index.column() == 1 ){
+   *       return AbstractTableModel::flags(index) | Qt::ItemIsEditable;
+   *     }
+   *
+   *     return AbstractTableModel::flags(index);
+   *   }
+   *
+   *  private:
+   *
+   *   int rowCountWithoutParentIndex() const override
+   *   {
+   *     return mList.rowCount();
+   *   }
+   *
+   *   int columnCountWithoutParentIndex() const override
+   *   {
+   *     return 2;
+   *   }
+   *
+   *   QVariant displayRoleData(const QModelIndex & index) const override
+   *   {
+   *     assert( indexIsValidAndInRange(index) );
+   *
+   *     switch( index.column() ){
+   *       case 0:
+   *         return mList.atRow( index.row() ).id();
+   *       case 1:
+   *         return mList.atRow( index.row() ).name();
+   *     }
+   *
+   *     return QVariant();
+   *   }
+   *
+   *   bool setEditRoleData(const QModelIndex & index, const QVariant & value) override
+   *   {
+   *     assert( indexIsValidAndInRange(index) );
+   *
+   *     switch( index.column() ){
+   *       case 1:
+   *         mList.atRowMutable( index.row() ).setName( value.toString() );
+   *         return true;
+   *     }
+   *
+   *     return false;
+   *   }
+   *
+   *   bool doSupportsInsertRows() const noexcept override
+   *   {
+   *     return true;
+   *   }
+   *
+   *   bool doSupportsRemoveRows() const noexcept override
+   *   {
+   *     return true;
+   *   }
+   *
+   *   void doInsertRows(int row, int count) override
+   *   {
+   *     assert( rowAndCountIsValidForInsertRows(row, count) );
+   *
+   *     mList.insertRows( row, count, Item() );
+   *   }
+   *
+   *   void doRemoveRows(int row, int count) override
+   *   {
+   *     assert( rowAndCountIsValidForRemoveRows(row, count) );
+   *
+   *     mList.removeRows(row, count);
+   *   }
+   *
+   *   Mdt::ItemModel::StlContiguousContainerAdapter< List, Mdt::ItemModel::StlContiguousContainerFunctionMap<List> > mList;
+   * };
+   * \endcode
+   *
+   * The above example is almost a complete implementation of a memory table model (header data is missing).
    *
    * \todo rowFromIndex()
    * \todo indexFromRow()
@@ -991,9 +1101,6 @@ namespace Mdt{ namespace ItemModel{
      *
      * \todo precondition: the container must be able to store row + count
      *
-     * \todo static preconditions like in test
-     *
-     * \todo should return void
      *
      * To use this method, the function map must have an insert function of this form:
      * \code
@@ -1001,13 +1108,24 @@ namespace Mdt{ namespace ItemModel{
      * void insert(Container & container, const_iterator pos, size_type count, const_reference value);
      * \endcode
      *
+     * To define pos, the function map must also have a const-qualified cbegin:
+     * \code
+     * static
+     * const_iterator cbegin(const Container & container) noexcept;
+     * \endcode
+     *
+     * \pre FunctionMap::difference_type must be defined
+     * \pre FunctionMap::const_iterator must be defined
      * \pre \a row must be >= 0
      * \pre \a row must be <= rowCount()
      * \pre \a count must be >= 1
      */
-    bool insertRows(int row, int count, const_reference value)
+    void insertRows(int row, int count, const_reference value)
     {
-      return false;
+      static_assert( !std::is_void_v<difference_type>, "call StlContiguousContainerAdapter::insertRows() requires FunctionMap::difference_type to be defined" );
+      static_assert( !std::is_void_v<const_iterator>, "call StlContiguousContainerAdapter::insertRows() requires FunctionMap::const_iterator to be defined" );
+
+      insertToStlContainer<Container, FunctionMap>(mContainer, row, count, value);
     }
 
     /*! \brief Append an element
@@ -1033,10 +1151,10 @@ namespace Mdt{ namespace ItemModel{
      * void erase(Container & container, const_iterator first, const_iterator last);
      * \endcode
      *
-     * To define first and last, a const-qualified begin is also required:
+     * To define first and last, the function map must also have a const-qualified cbegin:
      * \code
      * static
-     * const_iterator begin(const Container & container) const noexcept;
+     * const_iterator cbegin(const Container & container) noexcept;
      * \endcode
      *
      * \pre FunctionMap::difference_type must be defined
@@ -1051,8 +1169,10 @@ namespace Mdt{ namespace ItemModel{
       static_assert( !std::is_void_v<const_iterator>, "call StlContiguousContainerAdapter::removeRows() requires FunctionMap::const_iterator to be defined" );
       assert( row >= 0 );
       assert( count >= 1 );
+      assert( (row + count) > 0 );
       assert( (row + count) <= rowCount() );
 
+      removeFromStlContainer<Container, FunctionMap>(mContainer, row, count);
     }
 
     /*! \brief Get the size_type index from given row

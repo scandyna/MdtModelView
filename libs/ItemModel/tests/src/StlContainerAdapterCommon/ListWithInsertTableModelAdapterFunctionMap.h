@@ -16,6 +16,7 @@ struct ListWithInsertTableModelAdapterFunctionMap
 {
   using size_type = ListWithInsert::size_type;
   using const_reference = const Item &;
+  using difference_type = ListWithInsert::difference_type;
   using const_iterator = ListWithInsert::const_iterator;
 
   static
@@ -34,6 +35,12 @@ struct ListWithInsertTableModelAdapterFunctionMap
   void insert(ListWithInsert & list, const_iterator pos, size_type count, const_reference item)
   {
     list.insert(pos, count, item);
+  }
+
+  static
+  const_iterator cbegin(const ListWithInsert & list) noexcept
+  {
+    return list.cbegin();
   }
 };
 

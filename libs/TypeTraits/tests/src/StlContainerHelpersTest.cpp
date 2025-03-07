@@ -13,6 +13,7 @@
 #include <vector>
 #include <type_traits>
 
+
 /*
  * Types used for tests
  */
@@ -22,6 +23,17 @@ struct EmptyStruct
 };
 
 using Vector = std::vector<int>;
+
+
+/*
+ * Some helper functions static tests
+ */
+
+static_assert( Mdt::TypeTraits::is_void_or_void_pointer<void>() );
+static_assert( Mdt::TypeTraits::is_void_or_void_pointer<void*>() );
+
+static_assert( !Mdt::TypeTraits::is_void_or_void_pointer<int>() );
+static_assert( !Mdt::TypeTraits::is_void_or_void_pointer<int*>() );
 
 
 /*
@@ -52,8 +64,18 @@ static_assert( std::is_same_v< Mdt::TypeTraits::member_const_pointer_or_void<Vec
 static_assert( std::is_void_v< Mdt::TypeTraits::member_iterator_or_void<EmptyStruct> >);
 static_assert( std::is_same_v< Mdt::TypeTraits::member_iterator_or_void<Vector>, Vector::iterator >);
 
+static_assert( Mdt::TypeTraits::is_void_or_void_pointer< Mdt::TypeTraits::member_iterator_or_void_pointer<EmptyStruct> >() );
+static_assert( std::is_same_v< Mdt::TypeTraits::member_iterator_or_void_pointer<EmptyStruct>, void* > );
+static_assert( !Mdt::TypeTraits::is_void_or_void_pointer< Mdt::TypeTraits::member_iterator_or_void_pointer<Vector> >() );
+static_assert( std::is_same_v< Mdt::TypeTraits::member_iterator_or_void_pointer<Vector>, Vector::iterator > );
+
 static_assert( std::is_void_v< Mdt::TypeTraits::member_const_iterator_or_void<EmptyStruct> >);
 static_assert( std::is_same_v< Mdt::TypeTraits::member_const_iterator_or_void<Vector>, Vector::const_iterator >);
+
+static_assert( Mdt::TypeTraits::is_void_or_void_pointer< Mdt::TypeTraits::member_const_iterator_or_void_pointer<EmptyStruct> >() );
+static_assert( std::is_same_v< Mdt::TypeTraits::member_const_iterator_or_void_pointer<EmptyStruct>, void* > );
+static_assert( !Mdt::TypeTraits::is_void_or_void_pointer< Mdt::TypeTraits::member_const_iterator_or_void_pointer<Vector> >() );
+static_assert( std::is_same_v< Mdt::TypeTraits::member_const_iterator_or_void_pointer<Vector>, Vector::const_iterator >);
 
 static_assert( std::is_void_v< Mdt::TypeTraits::member_reverse_iterator_or_void<EmptyStruct> >);
 static_assert( std::is_same_v< Mdt::TypeTraits::member_reverse_iterator_or_void<Vector>, Vector::reverse_iterator >);

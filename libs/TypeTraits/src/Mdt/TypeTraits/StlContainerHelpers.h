@@ -17,57 +17,67 @@
 
 namespace Mdt{ namespace TypeTraits{
 
-  /*! \brief Returns Container::value_type if \a Container it defines it, otherwise void
+  /*! \brief Returns Container::value_type if \a Container defines it, otherwise void
    */
   template<typename Container>
   using member_value_type_or_void = detected_or_t<void, Impl::member_value_type_op, Container>;
 
-  /*! \brief Returns Container::size_type if \a Container it defines it, otherwise void
+  /*! \brief Returns Container::size_type if \a Container defines it, otherwise void
    */
   template<typename Container>
   using member_size_type_or_void = detected_or_t<void, Impl::member_size_type_op, Container>;
 
-  /*! \brief Returns Container::difference_type if \a Container it defines it, otherwise void
+  /*! \brief Returns Container::difference_type if \a Container defines it, otherwise void
    */
   template<typename Container>
   using member_difference_type_or_void = detected_or_t<void, Impl::member_difference_type_op, Container>;
 
-  /*! \brief Returns Container::reference if \a Container it defines it, otherwise void
+  /*! \brief Returns Container::reference if \a Container defines it, otherwise void
    */
   template<typename Container>
   using member_reference_or_void = detected_or_t<void, Impl::member_reference_op, Container>;
 
-  /*! \brief Returns Container::const_reference if \a Container it defines it, otherwise void
+  /*! \brief Returns Container::const_reference if \a Container defines it, otherwise void
    */
   template<typename Container>
   using member_const_reference_or_void = detected_or_t<void, Impl::member_const_reference_op, Container>;
 
-  /*! \brief Returns Container::pointer if \a Container it defines it, otherwise void
+  /*! \brief Returns Container::pointer if \a Container defines it, otherwise void
    */
   template<typename Container>
   using member_pointer_or_void = detected_or_t<void, Impl::member_pointer_op, Container>;
 
-  /*! \brief Returns Container::const_pointer if \a Container it defines it, otherwise void
+  /*! \brief Returns Container::const_pointer if \a Container defines it, otherwise void
    */
   template<typename Container>
   using member_const_pointer_or_void = detected_or_t<void, Impl::member_const_pointer_op, Container>;
 
-  /*! \brief Returns Container::iterator if \a Container it defines it, otherwise void
+  /*! \brief Returns Container::iterator if \a Container defines it, otherwise void
    */
   template<typename Container>
   using member_iterator_or_void = detected_or_t<void, Impl::member_iterator_op, Container>;
 
-  /*! \brief Returns Container::const_iterator if \a Container it defines it, otherwise void
+  /*! \brief Returns Container::iterator if \a Container defines it, otherwise void*
+   */
+  template<typename Container>
+  using member_iterator_or_void_pointer = detected_or_t<void*, Impl::member_iterator_op, Container>;
+
+  /*! \brief Returns Container::const_iterator if \a Container defines it, otherwise void
    */
   template<typename Container>
   using member_const_iterator_or_void = detected_or_t<void, Impl::member_const_iterator_op, Container>;
 
-  /*! \brief Returns Container::reverse_iterator if \a Container it defines it, otherwise void
+  /*! \brief Returns Container::const_iterator if \a Container defines it, otherwise void*
+   */
+  template<typename Container>
+  using member_const_iterator_or_void_pointer = detected_or_t<void*, Impl::member_const_iterator_op, Container>;
+
+  /*! \brief Returns Container::reverse_iterator if \a Container defines it, otherwise void
    */
   template<typename Container>
   using member_reverse_iterator_or_void = detected_or_t<void, Impl::member_reverse_iterator_op, Container>;
 
-  /*! \brief Returns Container::const_reverse_iterator if \a Container it defines it, otherwise void
+  /*! \brief Returns Container::const_reverse_iterator if \a Container defines it, otherwise void
    */
   template<typename Container>
   using member_const_reverse_iterator_or_void = detected_or_t<void, Impl::member_const_reverse_iterator_op, Container>;
@@ -98,6 +108,15 @@ namespace Mdt{ namespace TypeTraits{
   bool has_member_erase_first_last() noexcept
   {
     return is_detected_v<Impl::has_erase_first_last_op, Container>;
+  }
+
+  /*! \brief Check if type T is void or a void pointer
+   */
+  template<typename T>
+  constexpr
+  bool is_void_or_void_pointer() noexcept
+  {
+    return std::is_void_v< std::remove_pointer_t<T> >;
   }
 
 }} // namespace Mdt{ namespace TypeTraits{

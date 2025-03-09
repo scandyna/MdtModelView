@@ -15,6 +15,7 @@
 #include <Mdt/Numeric/Limits.h>
 #include <Mdt/Numeric/BasicConversion.h>
 #include <type_traits>
+#include <iterator>
 #include <utility>
 #include <cassert>
 
@@ -725,14 +726,10 @@ namespace Mdt{ namespace ItemModel{
    * \todo rowFromIndex()
    * \todo indexFromRow()
    *
-   * \todo Document the following examples with AbstractTableModel
    *
    * \todo document minimal requirements on the container.
    * For types, size_type and const_reference .
    *
-   * \todo example with a container that provides all requirements, like std::vector, or one with less than vector, but all for this adapter
-   *
-   * \todo example with vector: fast way to implement container for tests
    *
    * \todo Discuss default constructed:
    * - Should it exist in adapter ? Yes
@@ -789,17 +786,21 @@ namespace Mdt{ namespace ItemModel{
    *  public:
    *
    *   using size_type = std::vector<Interface>::size_type;
+   *   using difference_type = std::vector<Interface>::difference_type;
    *   using const_iterator = std::vector<Interface>::const_iterator;
    *
    *   // By default, only 1 interface is available: RS-232
    *   explicit
    *   InterfaceList();
    *
-   *   size_type size() const noexcept;
+   *   size_type interfaceCount() const noexcept;
    *
    *   const Interface & interfaceAt(size_type index) const noexcept;
    *
    *   const_iterator findPositionOfParameterValue(unsigned int value) const noexcept;
+   *
+   *   const_iterator cbegin() const noexcept;
+   *   const_iterator cend() const noexcept;
    *
    *  private:
    *
@@ -808,41 +809,151 @@ namespace Mdt{ namespace ItemModel{
    * \endcode
    *
    * In this example, we choose to have our own API.
-   * To conform to the StlContiguousContainerAdapter requirements,
-   * we make a separate adapter. This reduces coupling.
-   * We also could have choose to adapt or add reuired methods to be directly usable with the StlContiguousContainerAdapter.
+   * We could have chosen to adapt or add required methods to be directly usable with the StlContiguousContainerAdapter.
    *
-   * \todo remind: find() uses iterators.
-   * If we want this, we have to provide iterators in the domain object.
-   *
+   * To reduce coupling, and conform to the StlContiguousContainerAdapter requirements,
+   * we make a function map:
    * \code
-   * class InterfaceListTableModelAdapter
+   * struct InterfaceListTableModelAdapterFunctionMap
+   * {
+   *   using size_type = InterfaceList::size_type;
+   *   using difference_type = InterfaceList::difference_type;
+   *   using const_reference = const Interface &;
+   *   using const_iterator = InterfaceList::const_iterator;
+   *
+   *   static
+   *   size_type size(const InterfaceList & list) noexcept
+   *   {
+   *     return list.interfaceCount();
+   *   }
+   *
+   *   static
+   *   const_reference atIndex(const InterfaceList & list, size_type index) noexcept
+   *   {
+   *     return list.interfaceAt(index);
+   *   }
+   *
+   *   static
+   *   const_iterator cbegin(const InterfaceList & list) noexcept
+   *   {
+   *     return list.cbegin();
+   *   }
+   * };
+   * \endcode
+   * Note that cbegin() must be provided.
+   *
+   * Here is an example of a table model:
+   * \code
+   * class InterfaceListTableModel : public Mdt::ItemModel::AbstractTableModel
    * {
    *  public:
    *
-   *   using size_type = InterfaceList::size_type;
-   *   using const_iterator = InterfaceList::const_iterator;
-   *   using const_reference = const Interface &;
-   *
-   *   InterfaceListTableModelAdapter() = default;
-   *
-   *   size_type size() const noexcept
+   *   InterfaceListTableModel(const InterfaceList & list, QObject *parent = nullptr)
+   *    : AbstractTableModel(parent),
+   *      mList(list)
    *   {
-   *     return mList.size();
-   *   };
-   *
-   *   const Interface & at(size_type index) const noexcept
-   *   {
-   *     return mList.interfaceAt(index);
    *   }
    *
-   *   findXXXX() ?????
+   *   int findRowOfParameterValue(unsigned int value) const noexcept
+   *   {
+   *     const auto pos = mList.container().findPositionOfParameterValue(value);
+   *     if( mList.positionIsInRange(pos) ){
+   *       return mList.rowFromPosition(pos);
+   *     }
+   *     return -1;
+   *   }
    *
    *  private:
    *
-   *   InterfaceList mList;
+   *   int rowCountWithoutParentIndex() const override
+   *   {
+   *     return mList.rowCount();
+   *   }
+   *
+   *   int columnCountWithoutParentIndex() const override
+   *   {
+   *     return 2;
+   *   }
+   *
+   *   QVariant displayRoleData(const QModelIndex & index) const override
+   *   {
+   *     assert( indexIsValidAndInRange(index) );
+   *
+   *     switch( index.column() ){
+   *       case 0:
+   *         return mList.atRow( index.row() ).parameterValue(); // HEX formatting omitted here
+   *       case 1:
+   *         return mList.atRow( index.row() ).name();
+   *     }
+   *
+   *     return QVariant();
+   *   }
+   *
+   *   Mdt::ItemModel::StlContiguousContainerAdapter<InterfaceList, InterfaceListTableModelAdapterFunctionMap> mList;
    * };
    * \endcode
+   *
+   * Maybe the \a InterfaceList provides an index based find:
+   * \code
+   * class InterfaceList
+   * {
+   *   ...
+   *
+   *   using size_type = InterfaceList::size_type;
+   *   using const_reference = const Interface &;
+   *
+   *   std::optional<size_type> findIndexOfParameterValue(unsigned int value) const noexcept;
+   *
+   *   ...
+   * };
+   * \endcode
+   *
+   * difference_type and const_iterator are no more required.
+   * The function map also does not declare them anymore:
+   * \code
+   * struct InterfaceListTableModelAdapterFunctionMap
+   * {
+   *   using size_type = InterfaceList::size_type;
+   *   using const_reference = const Interface &;
+   *
+   *   static
+   *   size_type size(const InterfaceList & list) noexcept
+   *   {
+   *     return list.interfaceCount();
+   *   }
+   *
+   *   static
+   *   const_reference atIndex(const InterfaceList & list, size_type index) noexcept
+   *   {
+   *     return list.interfaceAt(index);
+   *   }
+   * };
+   * \endcode
+   * The cbegin() function is also no more required.
+   *
+   * Here is the updated table model's findRowOfParameterValue() method:
+   * \code
+   * class InterfaceListTableModel : public Mdt::ItemModel::AbstractTableModel
+   * {
+   *   ...
+   *
+   *   int findRowOfParameterValue(unsigned int value) const noexcept
+   *   {
+   *     const auto index = mList.container().findIndexOfParameterValue(value);
+   *     if( index.has_value() ){
+   *       return mList.rowFromIndex(*index);
+   *     }
+   *     return -1;
+   *   }
+   *
+   *   ...
+   * };
+   * \endcode
+   *
+   * Note that findRowOfParameterValue() returns -1 if given value was not found.
+   * Because this method is our own helper (it's not part of the Qt model/view API, except that row must be int),
+   * we could have chosen to adopt another strategy, like precondition that value exists,
+   * or throwing an exception.
    *
    * \code
    * class InterfaceListTableModel : QAbstractTableModel
@@ -1033,9 +1144,9 @@ namespace Mdt{ namespace ItemModel{
     /*! \brief STL const_iterator
      *
      * Will be FunctionMap::const_iterator if \a FunctionMap defines it,
-     * otherwise void.
+     * otherwise void*.
      */
-    using const_iterator = Mdt::TypeTraits::member_const_iterator_or_void<FunctionMap>;
+    using const_iterator = Mdt::TypeTraits::member_const_iterator_or_void_pointer<FunctionMap>;
 
     /*! \brief Construct an adapter with a default constructed container
      */
@@ -1095,11 +1206,36 @@ namespace Mdt{ namespace ItemModel{
       return FunctionMap::atIndexMutable( mContainer, indexFromRow(row) );
     }
 
-    /// \todo For return reference (can be void), can auto help ?
+    /*! \brief
+     *
+     * If rowCount() + count is not convertible to size_type,
+     * returns false.
+     *
+     * If the function map provides a function to check if the container can add \a count elements,
+     * it will be used for the check.
+     *
+     * This function must be of this form:
+     * \code
+     * static
+     * bool canAdd(const Container & container, size_type count);
+     * \endcode
+     *
+     * \todo Maybe the function should check about something like maxElementsCount() ?
+     * Also, some conditionals, like canAddElement(value) ?
+     *
+     * \pre \a count must be >= 1
+     */
+    bool canAdd(int count) const
+    {
+      assert( count >= 1 );
+
+    }
 
     /*! \brief Inserts count rows into the container before the given row
      *
      * \todo precondition: the container must be able to store row + count
+     *
+     * \todo implement preconditions !
      *
      *
      * To use this method, the function map must have an insert function of this form:
@@ -1123,7 +1259,9 @@ namespace Mdt{ namespace ItemModel{
     void insertRows(int row, int count, const_reference value)
     {
       static_assert( !std::is_void_v<difference_type>, "call StlContiguousContainerAdapter::insertRows() requires FunctionMap::difference_type to be defined" );
-      static_assert( !std::is_void_v<const_iterator>, "call StlContiguousContainerAdapter::insertRows() requires FunctionMap::const_iterator to be defined" );
+      static_assert( !Mdt::TypeTraits::is_void_or_void_pointer<const_iterator>(),
+                     "call StlContiguousContainerAdapter::insertRows() requires FunctionMap::const_iterator to be defined" );
+
 
       insertToStlContainer<Container, FunctionMap>(mContainer, row, count, value);
     }
@@ -1166,7 +1304,8 @@ namespace Mdt{ namespace ItemModel{
     void removeRows(int row, int count)
     {
       static_assert( !std::is_void_v<difference_type>, "call StlContiguousContainerAdapter::removeRows() requires FunctionMap::difference_type to be defined" );
-      static_assert( !std::is_void_v<const_iterator>, "call StlContiguousContainerAdapter::removeRows() requires FunctionMap::const_iterator to be defined" );
+      static_assert( !Mdt::TypeTraits::is_void_or_void_pointer<const_iterator>(),
+                     "call StlContiguousContainerAdapter::removeRows() requires FunctionMap::const_iterator to be defined" );
       assert( row >= 0 );
       assert( count >= 1 );
       assert( (row + count) > 0 );
@@ -1189,6 +1328,89 @@ namespace Mdt{ namespace ItemModel{
        * it is also in the range of size_type
        */
       return static_cast<size_type>(row);
+    }
+
+    /*! \brief Get the row from given size_type index
+     *
+     * \pre \a index must be convertible to int
+     * \pre \a index must be in range of the container ( 0 >= \a index < container's size )
+     */
+    int rowFromIndex(size_type index) const
+    {
+      assert( Mdt::Numeric::int_canHoldValueOf_T(index) );
+      assert( index >= 0 );
+      assert( index < FunctionMap::size(mContainer) );
+
+      return Mdt::Numeric::int_from_T(index);
+    }
+
+    /*! \brief Check if given iterator \a pos is in range
+     *
+     * Returns true if \a pos is in range of the container,
+     * and represents an index that is convertible to int.
+     * Otherwise returns false.
+     *
+     * To use this method, the function map must have a cbegin() function of this form:
+     * \code
+     * static
+     * const_iterator cbegin(const Container & container) noexcept;
+     * \endcode
+     *
+     * \pre FunctionMap::difference_type must be defined
+     * \pre FunctionMap::const_iterator must be defined
+     */
+    bool positionIsInRange(const_iterator pos) const
+    {
+      static_assert( !std::is_void_v<difference_type>, "call StlContiguousContainerAdapter::positionIsInRange() requires FunctionMap::difference_type to be defined" );
+      static_assert( !Mdt::TypeTraits::is_void_or_void_pointer<const_iterator>(),
+                     "call StlContiguousContainerAdapter::positionIsInRange() requires FunctionMap::const_iterator to be defined" );
+
+      const difference_type dIndex = std::distance(FunctionMap::cbegin(mContainer), pos);
+      if(dIndex < 0){
+        return false;
+      }
+      if( !Mdt::Numeric::int_canHoldValueOf_T(dIndex) ){
+        return false;
+      }
+      int row = Mdt::Numeric::int_from_T(dIndex);
+
+      return row < rowCount();
+    }
+
+    /*! \brief Get the row from given iterator \a pos
+     *
+     * To use this method, the function map must have a cbegin() function of this form:
+     * \code
+     * static
+     * const_iterator cbegin(const Container & container) noexcept;
+     * \endcode
+     *
+     * \pre FunctionMap::difference_type must be defined
+     * \pre FunctionMap::const_iterator must be defined
+     * \pre \a pos must be in range
+     * \sa positionIsInRange()
+     */
+    int rowFromPosition(const_iterator pos) const
+    {
+      static_assert( !std::is_void_v<difference_type>, "call StlContiguousContainerAdapter::rowFromPosition() requires FunctionMap::difference_type to be defined" );
+      static_assert( !Mdt::TypeTraits::is_void_or_void_pointer<const_iterator>(),
+                     "call StlContiguousContainerAdapter::rowFromPosition() requires FunctionMap::const_iterator to be defined" );
+      assert( positionIsInRange(pos) );
+
+      const difference_type dIndex = std::distance(FunctionMap::cbegin(mContainer), pos);
+      assert( Mdt::Numeric::int_canHoldValueOf_T(dIndex) );
+
+      int row = Mdt::Numeric::int_from_T(dIndex);
+      assert( row < rowCount() );
+
+      return row;
+    }
+
+    /*! \brief Access the container
+     */
+    const Container & container() const noexcept
+    {
+      return mContainer;
     }
 
     /*! \brief Access the container for mutation

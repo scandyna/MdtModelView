@@ -32,6 +32,8 @@
 #include "ListWithAppendTableModelAdapterFunctionMap.h"
 #include "ListWithErase.h"
 #include "ListWithEraseTableModelAdapterFunctionMap.h"
+#include "ReadOnlyWithIteratorFindList.h"
+#include "ReadOnlyWithIteratorFindListTableModelAdapterFunctionMap.h"
 
 #include "Mdt/ItemModel/SharedStlContiguousContainerAdapter.h"
 
@@ -644,58 +646,6 @@ struct MyModelWithReference
   /** Read only example with iterator based find
    */
 
-  struct MyReadOnlyWithIteratorFindList
-  {
-    using size_type = std::vector<Item>::size_type;
-    using const_iterator = std::vector<Item>::const_iterator;
-
-    size_type getSizeCustom() const noexcept
-    {
-      return 25;
-    }
-
-    const Item & itemAt(size_type index) const noexcept
-    {
-    }
-
-    const_iterator findItemWithId(int id) const noexcept
-    {
-    }
-  };
-
-  struct MyReadOnlyWithIteratorFindListTableModelAdapterFunctionMap
-  {
-    using size_type = MyReadOnlyWithIteratorFindList::size_type;
-    using const_reference = const Item &;
-    using const_iterator = MyReadOnlyWithIteratorFindList::const_iterator;
-
-    static
-    constexpr
-    bool supportsInsert() noexcept
-    {
-      return false;
-    }
-
-    static
-    constexpr
-    bool supportsErase() noexcept
-    {
-      return false;
-    }
-
-    static
-    size_type size(const MyReadOnlyWithIteratorFindList & list) noexcept
-    {
-      return list.getSizeCustom();
-    }
-
-    static
-    const_reference atIndex(const MyReadOnlyWithIteratorFindList & list, size_type index) noexcept
-    {
-      return list.itemAt(index);
-    }
-  };
-
   /// \todo table model
 
   /** Read only example with index based find
@@ -831,6 +781,9 @@ using ListWithAppendAdapted = StlContiguousContainerAdapter<ListWithAppend, List
 
 using ListWithEraseAdapted = StlContiguousContainerAdapter<ListWithErase, ListWithEraseTableModelAdapterFunctionMap>;
 
+
+using ReadOnlyWithIteratorFindListAdapted = StlContiguousContainerAdapter<ReadOnlyWithIteratorFindList, ReadOnlyWithIteratorFindListTableModelAdapterFunctionMap>;
+
   /// \todo table model
 
 TEMPLATE_TEST_CASE("default_constructed", "", DefaultConstructibleOnlyListAdapted)
@@ -877,14 +830,35 @@ TEST_CASE("indexFromRow")
   CHECK( list.indexFromRow(0) == 0 );
 }
 
-TEST_CASE("rowFromPosition")
-{
-  /// REQUIRE(false);
-}
-
 TEST_CASE("rowFromIndex")
 {
-  /// REQUIRE(false);
+  ReadOnlyListAdapted list( ReadOnlyList::fromItemList({{1,"A"},{2,"B"}}) );
+  REQUIRE( list.rowCount() == 2 );
+
+  CHECK( list.rowFromIndex(0) == 0 );
+  CHECK( list.rowFromIndex(1) == 1 );
+}
+
+TEST_CASE("positionIsInRange")
+{
+  ReadOnlyWithIteratorFindListAdapted list( ReadOnlyWithIteratorFindList::fromItemList({{1,"A"},{2,"B"},{3,"C"}}) );
+  REQUIRE( list.rowCount() == 3 );
+
+  CHECK( list.positionIsInRange( list.container().cbegin() ) );
+  CHECK( list.positionIsInRange( list.container().cbegin()+1 ) );
+  CHECK( list.positionIsInRange( list.container().cbegin()+2 ) );
+  CHECK( !list.positionIsInRange( list.container().cbegin()+3 ) );
+  CHECK( !list.positionIsInRange( list.container().cend() ) );
+}
+
+TEST_CASE("rowFromPosition")
+{
+  ReadOnlyWithIteratorFindListAdapted list( ReadOnlyWithIteratorFindList::fromItemList({{1,"A"},{2,"B"},{3,"C"}}) );
+  REQUIRE( list.rowCount() == 3 );
+
+  CHECK( list.rowFromPosition( list.container().cbegin() ) == 0 );
+  CHECK( list.rowFromPosition( list.container().cbegin()+1 ) == 1 );
+  CHECK( list.rowFromPosition( list.container().cbegin()+2 ) == 2 );
 }
 
 TEMPLATE_TEST_CASE("ReadOnly_example", "", ReadOnlyListContainerAndFunctionMap)

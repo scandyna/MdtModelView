@@ -19,6 +19,8 @@ add_library(Mdt_ItemModelStlContainerAdapterTestCommon STATIC
   ListWithAppendTableModelAdapterFunctionMap.cpp
   ListWithErase.cpp
   ListWithEraseTableModelAdapterFunctionMap.cpp
+  ReadOnlyWithIteratorFindList.cpp
+  ReadOnlyWithIteratorFindListTableModelAdapterFunctionMap.cpp
 )
 add_library(Mdt::ItemModelStlContainerAdapterTestCommon ALIAS Mdt_ItemModelStlContainerAdapterTestCommon)
 

@@ -89,6 +89,22 @@ namespace Mdt{ namespace TypeTraits{ namespace Impl{
                                      std::declval<typename Container::const_iterator>() )
   );
 
+  /*! \internal
+   */
+  template<typename FunctionMap, typename Container>
+  struct FunctionMapAndContainer
+  {
+    using function_map = FunctionMap;
+    using container = Container;
+  };
+
+  /*! \internal
+   */
+  template<typename FunctionMapAndContainer>
+  using has_member_maxSize_container_op = decltype(
+    std::declval<typename FunctionMapAndContainer::function_map>().maxSize( std::declval<const typename FunctionMapAndContainer::container &>() )
+  );
+
 }}} // namespace Mdt{ namespace TypeTraits{ namespace Impl{
 
 #endif // #ifndef MDT_TYPE_TRAITS_IMPL_STL_CONTAINER_HELPERS_H

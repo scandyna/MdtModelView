@@ -110,6 +110,20 @@ namespace Mdt{ namespace TypeTraits{
     return is_detected_v<Impl::has_erase_first_last_op, Container>;
   }
 
+  /*! \brief Check if given function map has a maxSize member function
+   *
+   * Returns true if \a FunctionMap has a maxSize member function with this signature:
+   * \code
+   * size_type maxSize(const Container & container);
+   * \endcode
+   */
+  template<typename FunctionMap, typename Container>
+  constexpr
+  bool has_member_maxSize_container() noexcept
+  {
+    return is_detected_v< Impl::has_member_maxSize_container_op, Impl::FunctionMapAndContainer<FunctionMap, Container> >;
+  }
+
   /*! \brief Check if type T is void or a void pointer
    */
   template<typename T>

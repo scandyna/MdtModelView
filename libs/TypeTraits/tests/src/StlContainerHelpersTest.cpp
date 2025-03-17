@@ -166,6 +166,50 @@ struct ContainerWithErase
   void erase(const_iterator first, const_iterator last);
 };
 
+struct AdapterFunctionMapWithErase
+{
+  using size_type = ContainerWithErase::size_type;
+  using const_reference = const Item &;
+  using const_iterator = ContainerWithErase::const_iterator;
+
+  static
+  void erase(ContainerWithErase & list, const_iterator first, const_iterator last);
+};
+
+
+struct ContainerWithMaxSize
+{
+  using size_type = std::vector<Item>::size_type;
+
+  size_type max_size() const noexcept
+  {
+    return 27;
+  }
+};
+
+struct AdapterFunctionMapWithMaxSize
+{
+  using size_type = ContainerWithMaxSize::size_type;
+
+  static
+  size_type maxSize(const ContainerWithMaxSize & list) noexcept
+  {
+    return list.max_size();
+  }
+};
+
+
+/*
+ * maxSize() member functions static tests
+ */
+
+static_assert( !Mdt::TypeTraits::has_member_maxSize_container<AdapterFunctionMapWithErase, ContainerWithErase>() );
+static_assert( Mdt::TypeTraits::has_member_maxSize_container<AdapterFunctionMapWithMaxSize, ContainerWithMaxSize>() );
+
+
+/*
+ * Runtime tests
+ */
 
 TEST_CASE("insert")
 {

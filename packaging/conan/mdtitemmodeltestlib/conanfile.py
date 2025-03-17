@@ -24,7 +24,6 @@ class MdtItemModelTestLibConan(ConanFile):
   def requirements(self):
     self.requires("qt/5.15.6")
     self.requires("mdtcmakeconfig/0.1.0@scandyna/testing")
-    self.requires("mdtnumeric/0.0.1@scandyna/testing")
     self.requires(f"mdtitemmodel/{self.version}@scandyna/testing")
 
   def build_requirements(self):
@@ -68,5 +67,5 @@ class MdtItemModelTestLibConan(ConanFile):
     self.cpp_info.set_property("cmake_target_name", "Mdt0::ItemModelTestLib")
     # We have to specify the components of Qt to use, otherwise we will depend on all
     # See also https://gitlab.com/scandyna/mdtmodelview/-/issues/2
-    self.cpp_info.requires = ["mdtitemmodel::mdtitemmodel", "mdtnumeric::mdtnumeric", "qt::qtCore"]
+    self.cpp_info.requires = ["mdtitemmodel::mdtitemmodel", "qt::qtCore"]
     self.cpp_info.libs = ["Mdt0ItemModelTestLib"]

@@ -15,6 +15,8 @@ add_library(Mdt_ItemModelStlContainerAdapterTestCommon STATIC
   MutableListTableModelAdapterFunctionMap.cpp
   ListWithInsert.cpp
   ListWithInsertTableModelAdapterFunctionMap.cpp
+  ListWithInsertAndLimit.cpp
+  ListWithInsertAndLimitTableModelAdapterFunctionMap.cpp
   ListWithAppend.cpp
   ListWithAppendTableModelAdapterFunctionMap.cpp
   ListWithErase.cpp

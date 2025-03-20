@@ -12,8 +12,10 @@
 
 #include "Mdt/TypeTraits/StlContainerHelpers.h"
 #include "Mdt/ItemModel/StlHelpers.h"
+#include "Mdt/ItemModel/NumericLimits.h"
 #include <Mdt/Numeric/Limits.h>
 #include <Mdt/Numeric/BasicConversion.h>
+#include <Mdt/Numeric/IntegerComparison.h>
 #include <type_traits>
 #include <iterator>
 #include <utility>
@@ -465,6 +467,85 @@ namespace Mdt{ namespace ItemModel{
    *   Mdt::ItemModel::StlContiguousContainerAdapter<ListWithInsert, ListWithInsertTableModelAdapterFunctionMap> mList;
    * };
    * \endcode
+   *
+   * \subsection Mdt_ItemModel_StlContiguousContainerAdapter_ResizableContainers_InsertAndLimit Container that provides insert() and limits the count of elements
+   *
+   * Example of a container that provides insert and a limit of the allowed count of elements:
+   * \code
+   * class ListWithInsertAndLimit
+   * {
+   *  public:
+   *
+   *   using size_type = std::vector<Item>::size_type;
+   *   using difference_type = std::vector<Item>::difference_type;
+   *   using const_iterator = std::vector<Item>::const_iterator;
+   *
+   *   size_type getSizeCustom() const noexcept;
+   *   size_type maximumElementCount() const noexcept;
+   *   const Item & itemAt(size_type index) const noexcept;
+   *
+   *   void insert(const_iterator pos, size_type count, const Item & item);
+   *
+   *   const_iterator cbegin() const noexcept;
+   *   const_iterator cend() const noexcept;
+   * };
+   * \endcode
+   *
+   * The function map is the same as above,
+   * but it also provides the %maxSize() function:
+   * \code
+   * struct ListWithInsertAndLimitTableModelAdapterFunctionMap
+   * {
+   *   ...
+   *
+   *   static
+   *   size_type maxSize(const ListWithInsertAndLimit & list)
+   *   {
+   *     return list.maximumElementCount();
+   *   }
+   *
+   *   ...
+   * }
+   * \endcode
+   *
+   * Here is an example for the insert part of a table model:
+   * \code
+   * class ListWithInsertAndLimitTableModel : public Mdt::ItemModel::AbstractTableModel
+   * {
+   *  public:
+   *
+   *   // Constructor omitted
+   *
+   *  private:
+   *
+   *   // Methods identical to the read only example omitted here
+   *
+   *   int maxRowCount() const override
+   *   {
+   *     return mList.maxRowCount();
+   *   }
+   *
+   *   bool doSupportsInsertRows() const noexcept override
+   *   {
+   *     return true;
+   *   }
+   *
+   *   void doInsertRows(int row, int count) override
+   *   {
+   *     assert( rowAndCountIsValidForInsertRows(row, count) );
+   *
+   *     mList.insertRows( row, count, Item() );
+   *   }
+   *
+   *   Mdt::ItemModel::StlContiguousContainerAdapter<ListWithInsertAndLimit, ListWithInsertAndLimitTableModelAdapterFunctionMap> mList;
+   * };
+   * \endcode
+   *
+   * \todo AbstractTableModel should provide maxRowCount() virtual method defaulted to int max
+   *
+   * \todo This adapter should also provide maxRowCount()
+   *
+   * \todo explain that this is not limited to insert()
    *
    * \subsection Mdt_ItemModel_StlContiguousContainerAdapter_ResizableContainers_PushBack Container that provides push_back() or similar
    *
@@ -1172,6 +1253,8 @@ namespace Mdt{ namespace ItemModel{
     /*! \brief Get the count of rows for the model
      *
      * \pre The current size of the container must be convertible to int
+     *
+     * \todo Maybe add pre must be <= maxRowCount() and >= 0
      */
     int rowCount() const
     {
@@ -1206,36 +1289,67 @@ namespace Mdt{ namespace ItemModel{
       return FunctionMap::atIndexMutable( mContainer, indexFromRow(row) );
     }
 
-    /*! \brief
+    /*! \brief Get the maximum allowed count of rows
      *
-     * If rowCount() + count is not convertible to size_type,
-     * returns false.
-     *
-     * If the function map provides a function to check if the container can add \a count elements,
-     * it will be used for the check.
+     * If the function map provides a function to get the container's maximum allowed size,
+     * it will be used.
      *
      * This function must be of this form:
      * \code
      * static
-     * bool canAdd(const Container & container, size_type count);
+     * size_type maxSize(const Container & container);
      * \endcode
      *
-     * \todo Maybe the function should check about something like maxElementsCount() ?
-     * Also, some conditionals, like canAddElement(value) ?
+     * Returns the minimum value between:
+     * - the largest possible value for int
+     * - the largest possible value for size_type
+     * - FunctionMap::maxSize() if defined
+     */
+    int maxRowCount() const
+    {
+      if constexpr( Mdt::TypeTraits::has_member_maxSize_container<FunctionMap, Container>() ){
+        return minBetweenSizeTypeValueAndIntMax( FunctionMap::maxSize(mContainer) );
+      }
+      return minBetweenSizeTypeMaxAndIntMax<size_type>();
+    }
+
+    /*! \brief Check if given \a count rows can be added
+     *
+     *
+     *
+     * If rowCount() + \a count can't be represented by int,
+     * returns false.
+     *
+     * If rowCount() + \a count is not convertible to size_type,
+     * returns false.
+     *
+     * \todo this is enforced by maxRowCount() ?
+     *
+     * If rowCount() + \a count exceeds maxRowCount(),
+     * returns false.
+     *
+     *
+     * \todo see https://github.com/cplusplus/papers/issues/393
+     *
+     * \todo AbstractTableModel will have the same issue to deal with
+     * Provide a common helper
      *
      * \pre \a count must be >= 1
      */
-    bool canAdd(int count) const
+    bool canAddCountRows(int count) const
     {
       assert( count >= 1 );
 
+      if( !Mdt::Numeric::canAdd(rowCount(), count) ){
+        return false;
+      }
+
+      return (rowCount() + count) <= maxRowCount();
     }
 
     /*! \brief Inserts count rows into the container before the given row
      *
      * \todo precondition: the container must be able to store row + count
-     *
-     * \todo implement preconditions !
      *
      *
      * To use this method, the function map must have an insert function of this form:
@@ -1261,7 +1375,9 @@ namespace Mdt{ namespace ItemModel{
       static_assert( !std::is_void_v<difference_type>, "call StlContiguousContainerAdapter::insertRows() requires FunctionMap::difference_type to be defined" );
       static_assert( !Mdt::TypeTraits::is_void_or_void_pointer<const_iterator>(),
                      "call StlContiguousContainerAdapter::insertRows() requires FunctionMap::const_iterator to be defined" );
-
+      assert( row >= 0 );
+      assert( row <= rowCount() );
+      assert( count >= 1 );
 
       insertToStlContainer<Container, FunctionMap>(mContainer, row, count, value);
     }

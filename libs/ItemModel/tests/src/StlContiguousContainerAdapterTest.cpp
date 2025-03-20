@@ -34,6 +34,8 @@
 #include "ListWithEraseTableModelAdapterFunctionMap.h"
 #include "ReadOnlyWithIteratorFindList.h"
 #include "ReadOnlyWithIteratorFindListTableModelAdapterFunctionMap.h"
+#include "ListWithInsertAndLimit.h"
+#include "ListWithInsertAndLimitTableModelAdapterFunctionMap.h"
 
 #include "Mdt/ItemModel/SharedStlContiguousContainerAdapter.h"
 
@@ -779,8 +781,9 @@ using MutableListAdapted = StlContiguousContainerAdapter<MutableList, MutableLis
 using ListWithInsertAdapted = StlContiguousContainerAdapter<ListWithInsert, ListWithInsertTableModelAdapterFunctionMap>;
 using ListWithAppendAdapted = StlContiguousContainerAdapter<ListWithAppend, ListWithAppendTableModelAdapterFunctionMap>;
 
-using ListWithEraseAdapted = StlContiguousContainerAdapter<ListWithErase, ListWithEraseTableModelAdapterFunctionMap>;
+using ListWithInsertAndLimitAdapted = StlContiguousContainerAdapter<ListWithInsertAndLimit, ListWithInsertAndLimitTableModelAdapterFunctionMap>;
 
+using ListWithEraseAdapted = StlContiguousContainerAdapter<ListWithErase, ListWithEraseTableModelAdapterFunctionMap>;
 
 using ReadOnlyWithIteratorFindListAdapted = StlContiguousContainerAdapter<ReadOnlyWithIteratorFindList, ReadOnlyWithIteratorFindListTableModelAdapterFunctionMap>;
 
@@ -924,6 +927,59 @@ TEST_CASE("ListWithErase_example")
   list.removeRows(0, 1);
 
   CHECK( list.rowCount() == 0 );
+}
+
+TEST_CASE("maxRowCount_No_maxSize")
+{
+  ListWithInsertAdapted list;
+
+  /*
+   * We use std::vector in the test containers,
+   * size_type is unsigned and at least unsigned int
+   * (but probably an unsigned 64 bit int).
+   */
+  CHECK( list.maxRowCount() == intMax() );
+}
+
+TEST_CASE("maxRowCount_With_maxSize")
+{
+  ListWithInsertAndLimitAdapted list;
+
+  list.containerMutable().setMaximumElementCount(25);
+
+  CHECK( list.maxRowCount() == 25 );
+}
+
+TEST_CASE("canAddCountRows")
+{
+  ListWithInsertAndLimitAdapted list;
+  list.containerMutable().setMaximumElementCount(5);
+  REQUIRE( list.maxRowCount() == 5 );
+  REQUIRE( list.rowCount() == 0 );
+
+  SECTION("empty list")
+  {
+    CHECK( list.canAddCountRows(1) );
+    CHECK( list.canAddCountRows(2) );
+    CHECK( list.canAddCountRows(4) );
+    CHECK( list.canAddCountRows(5) );
+    CHECK( !list.canAddCountRows(6) );
+    CHECK( !list.canAddCountRows(7) );
+    CHECK( !list.canAddCountRows( intMax() ) );
+  }
+
+  SECTION("list with 2 elements")
+  {
+    list.insertRows( 0, 2, Item() );
+    REQUIRE( list.rowCount() == 2 );
+
+    CHECK( list.canAddCountRows(1) );
+    CHECK( list.canAddCountRows(2) );
+    CHECK( list.canAddCountRows(3) );
+    CHECK( !list.canAddCountRows(4) );
+    CHECK( !list.canAddCountRows(5) );
+    CHECK( !list.canAddCountRows( intMax() ) );
+  }
 }
 
 // TEMPLATE_TEST_CASE("default_constructed", "", TestContainerAdapter, SharedTestContainerAdapter)

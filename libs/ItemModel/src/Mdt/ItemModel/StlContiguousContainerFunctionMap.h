@@ -16,6 +16,8 @@ namespace Mdt{ namespace ItemModel{
 
   /*! \brief STL ContiguousContainer function map for STL adapters
    *
+   * \todo add maxSize()
+   *
    * \sa StlContiguousContainerAdapter
    * \sa https://en.cppreference.com/w/cpp/named_req/ContiguousContainer
    */
@@ -48,6 +50,14 @@ namespace Mdt{ namespace ItemModel{
     size_type size(const Container & container) noexcept
     {
       return container.size();
+    }
+
+    /*! \brief Get the maximum size of the container
+     */
+    static
+    size_type maxSize(const Container & container) noexcept
+    {
+      return container.max_size();
     }
 
     /*! \brief Get the element at given index

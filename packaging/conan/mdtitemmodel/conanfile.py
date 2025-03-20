@@ -24,7 +24,7 @@ class MdtItemModelConan(ConanFile):
   def requirements(self):
     self.requires("qt/5.15.6")
     self.requires("mdtcmakeconfig/0.1.0@scandyna/testing")
-    self.requires("mdtnumeric/0.0.5@scandyna/testing")
+    self.requires("mdtnumeric/0.0.6@scandyna/testing")
 
   def build_requirements(self):
     self.test_requires("mdtcmakemodules/0.20.0@scandyna/testing")

@@ -4,7 +4,7 @@
  ** MdtModelView
  ** Set of libraries extending the Qt model-view framework.
  **
- ** Copyright (C) 2023-2023 Philippe Steinmann.
+ ** Copyright (C) 2023-2025 Philippe Steinmann.
  **
  *****************************************************************************************/
 #include "TableModelCommonBase.h"
@@ -24,11 +24,7 @@ void TableModelCommonBase::insertRecordToTable(int row, int count, const Record 
 {
   assert( rowAndCountIsValidForInsertRows(row, count) );
 
-  const auto dRow = static_cast<Table::difference_type>(row);
-  auto it = std::next(mTable.begin(), dRow);
-
-  const auto sCount = static_cast<size_t>(count);
-  mTable.insert(it, sCount, record);
+  insertToStlContainer(mTable, row, count, record);
 }
 
 void TableModelCommonBase::appendRecordToTable(const Record & record) noexcept

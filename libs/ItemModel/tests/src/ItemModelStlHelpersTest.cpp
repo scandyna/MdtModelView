@@ -4,16 +4,94 @@
  ** MdtModelView
  ** Set of libraries extending the Qt model-view framework.
  **
- ** Copyright (C) 2023-2023 Philippe Steinmann.
+ ** Copyright (C) 2023-2025 Philippe Steinmann.
  **
  *****************************************************************************************/
 #include "catch2/catch.hpp"
 #include "Catch2QString.h"
 #include "Mdt/ItemModel/StlHelpers.h"
+#include "Mdt/ItemModel/NumericLimits.h"
 #include <vector>
 
 using namespace Mdt::ItemModel;
 
+struct TestVector : public std::vector<int>
+{
+  void setMaxSize(size_type s) noexcept
+  {
+    mMaxSize = s;
+  }
+
+  size_type max_size() const noexcept
+  {
+    return mMaxSize;
+  }
+
+ private:
+
+  size_type mMaxSize = 1;
+};
+
+
+TEST_CASE("stlContainerMaxElementCount")
+{
+  TestVector v;
+  v.setMaxSize(25);
+  REQUIRE( v.max_size() == 25 );
+
+  CHECK( stlContainerMaxElementCount(v) == 25 );
+}
+
+TEST_CASE("stlContainerElementCount")
+{
+  SECTION("empty collection")
+  {
+    std::vector<int> v;
+
+    CHECK( stlContainerElementCount(v) == 0 );
+  }
+
+  SECTION("collection with 3 elements")
+  {
+    std::vector<int> v{1,2,3};
+
+    CHECK( stlContainerElementCount(v) == 3 );
+  }
+}
+
+TEST_CASE("canAddCountElementsToStlContainer")
+{
+  TestVector v;
+  v.setMaxSize(5);
+  REQUIRE( v.max_size() == 5 );
+
+  SECTION("empty collection")
+  {
+    REQUIRE( v.size() == 0 );
+
+    CHECK( canAddCountElementsToStlContainer(v, 1) );
+    CHECK( canAddCountElementsToStlContainer(v, 2) );
+    CHECK( canAddCountElementsToStlContainer(v, 3) );
+    CHECK( canAddCountElementsToStlContainer(v, 4) );
+    CHECK( canAddCountElementsToStlContainer(v, 5) );
+    CHECK( !canAddCountElementsToStlContainer(v, 6) );
+    CHECK( !canAddCountElementsToStlContainer(v, 7) );
+    CHECK( !canAddCountElementsToStlContainer( v, intMax() ) );
+  }
+
+  SECTION("collection with 2 elements")
+  {
+    insertToStlContainer(v, 0, 2, 46);
+    REQUIRE( v.size() == 2 );
+
+    CHECK( canAddCountElementsToStlContainer(v, 1) );
+    CHECK( canAddCountElementsToStlContainer(v, 2) );
+    CHECK( canAddCountElementsToStlContainer(v, 3) );
+    CHECK( !canAddCountElementsToStlContainer(v, 4) );
+    CHECK( !canAddCountElementsToStlContainer(v, 5) );
+    CHECK( !canAddCountElementsToStlContainer( v, intMax() ) );
+  }
+}
 
 TEST_CASE("insertToStlContainer")
 {

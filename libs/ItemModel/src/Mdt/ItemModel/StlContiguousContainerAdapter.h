@@ -1252,15 +1252,18 @@ namespace Mdt{ namespace ItemModel{
 
     /*! \brief Get the count of rows for the model
      *
-     * \pre The current size of the container must be convertible to int
-     *
-     * \todo Maybe add pre must be <= maxRowCount() and >= 0
+     * \pre The current size of the container must be convertible to int.
+     * The result must also be >= 0 and <= maxRowCount()
      */
     int rowCount() const
     {
       assert( Mdt::Numeric::int_canHoldValueOf_T( FunctionMap::size(mContainer) ) );
 
-      return Mdt::Numeric::int_from_T( FunctionMap::size(mContainer) );
+      const int count = Mdt::Numeric::int_from_T( FunctionMap::size(mContainer) );
+      assert( count >= 0 );
+      assert( count <= maxRowCount() );
+
+      return count;
     }
 
     /*! \brief Get the element at given row
@@ -1315,21 +1318,14 @@ namespace Mdt{ namespace ItemModel{
 
     /*! \brief Check if given \a count rows can be added
      *
-     *
-     *
      * If rowCount() + \a count can't be represented by int,
      * returns false.
-     *
-     * If rowCount() + \a count is not convertible to size_type,
-     * returns false.
-     *
-     * \todo this is enforced by maxRowCount() ?
      *
      * If rowCount() + \a count exceeds maxRowCount(),
      * returns false.
      *
-     *
-     * \todo see https://github.com/cplusplus/papers/issues/393
+     * This also implies that rowCount() + \a count can be represented
+     * by size_type .
      *
      * \todo AbstractTableModel will have the same issue to deal with
      * Provide a common helper
@@ -1349,9 +1345,6 @@ namespace Mdt{ namespace ItemModel{
 
     /*! \brief Inserts count rows into the container before the given row
      *
-     * \todo precondition: the container must be able to store row + count
-     *
-     *
      * To use this method, the function map must have an insert function of this form:
      * \code
      * static
@@ -1369,6 +1362,7 @@ namespace Mdt{ namespace ItemModel{
      * \pre \a row must be >= 0
      * \pre \a row must be <= rowCount()
      * \pre \a count must be >= 1
+     * \pre it must be possible to add \a count rows
      */
     void insertRows(int row, int count, const_reference value)
     {
@@ -1378,6 +1372,7 @@ namespace Mdt{ namespace ItemModel{
       assert( row >= 0 );
       assert( row <= rowCount() );
       assert( count >= 1 );
+      assert( canAddCountRows(count) );
 
       insertToStlContainer<Container, FunctionMap>(mContainer, row, count, value);
     }
@@ -1391,9 +1386,13 @@ namespace Mdt{ namespace ItemModel{
      * static
      * void push_back(Container & container, const_reference value);
      * \endcode
+     *
+     * \pre it must be possible to a row
      */
     void appendRow(const_reference value)
     {
+      assert( canAddCountRows(1) );
+
       FunctionMap::push_back(mContainer, value);
     }
 
@@ -1424,6 +1423,7 @@ namespace Mdt{ namespace ItemModel{
                      "call StlContiguousContainerAdapter::removeRows() requires FunctionMap::const_iterator to be defined" );
       assert( row >= 0 );
       assert( count >= 1 );
+      assert( Mdt::Numeric::canAdd(row, count) );
       assert( (row + count) > 0 );
       assert( (row + count) <= rowCount() );
 

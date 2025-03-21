@@ -59,7 +59,7 @@ namespace Mdt{ namespace ItemModel{
 
     const int count = Mdt::Numeric::int_from_T( FunctionMap::size(container) );
     assert( count >= 0 );
-    assert( count <= stlContainerMaxElementCount(container) );
+    assert( ( count <= stlContainerMaxElementCount<Container, FunctionMap>(container) ) );
 
     return count;
   }
@@ -85,11 +85,11 @@ namespace Mdt{ namespace ItemModel{
   {
     assert( count >= 1 );
 
-    if( !Mdt::Numeric::canAdd(stlContainerElementCount(container), count) ){
+    if( !Mdt::Numeric::canAdd(stlContainerElementCount<Container, FunctionMap>(container), count) ){
       return false;
     }
 
-    return (stlContainerElementCount(container) + count) <= stlContainerMaxElementCount(container);
+    return (stlContainerElementCount<Container, FunctionMap>(container) + count) <= stlContainerMaxElementCount<Container, FunctionMap>(container);
   }
 
   /*! \brief Inserts \a count elements into the container before the given \a index
@@ -108,8 +108,9 @@ namespace Mdt{ namespace ItemModel{
   void insertToStlContainer(Container & container, int index, int count, const typename FunctionMap::const_reference value) noexcept
   {
     assert( index >= 0 );
-    assert( static_cast<typename FunctionMap::size_type>(index) <= FunctionMap::size(container) );
+    assert( ( index <= stlContainerElementCount<Container, FunctionMap>(container) ) );
     assert( count >= 1 );
+    assert( ( canAddCountElementsToStlContainer<Container, FunctionMap>(container, count) ) );
     assert( (index + count) > 0 );
 
     const auto dIndex = static_cast<typename FunctionMap::difference_type>(index);
@@ -140,8 +141,9 @@ namespace Mdt{ namespace ItemModel{
   {
     assert( index >= 0 );
     assert( count >= 1 );
+    assert( Mdt::Numeric::canAdd(index, count) );
     assert( (index + count) > 0 );
-    assert( static_cast<typename FunctionMap::size_type>(index + count) <= FunctionMap::size(container) );
+    assert( ( (index + count) <= stlContainerElementCount<Container, FunctionMap>(container) ) );
 
     const auto dIndex = static_cast<typename FunctionMap::difference_type>(index);
     const auto dCount = static_cast<typename FunctionMap::difference_type>(count);

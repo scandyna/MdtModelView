@@ -4,10 +4,12 @@
  ** MdtModelView
  ** Set of libraries extending the Qt model-view framework.
  **
- ** Copyright (C) 2011-2024 Philippe Steinmann.
+ ** Copyright (C) 2011-2025 Philippe Steinmann.
  **
  *****************************************************************************************/
 #include "AbstractTableModel.h"
+#include "Mdt/Numeric/Limits.h"
+#include <limits>
 #include <cassert>
 
 namespace Mdt{ namespace ItemModel{
@@ -24,6 +26,14 @@ int AbstractTableModel::rowCount(const QModelIndex & parent) const
   }
 
   return rowCountWithoutParentIndex();
+}
+
+int AbstractTableModel::maxRowCount() const
+{
+  const int count = doMaxRowCount();
+  assert( count > 0 );
+
+  return count;
 }
 
 int AbstractTableModel::columnCount(const QModelIndex & parent) const
@@ -115,6 +125,17 @@ bool AbstractTableModel::setData(const QModelIndex & index, const QVariant & val
   return false;
 }
 
+bool AbstractTableModel::canAddCountRows(int count) const
+{
+  assert( count >= 1 );
+
+  if( !Mdt::Numeric::canAdd(rowCount(), count) ){
+    return false;
+  }
+
+  return (rowCount() + count) <= maxRowCount();
+}
+
 bool AbstractTableModel::rowAndCountIsValidForInsertRows(int row, int count) const noexcept
 {
   if( row < 0 ){
@@ -124,6 +145,9 @@ bool AbstractTableModel::rowAndCountIsValidForInsertRows(int row, int count) con
     return false;
   }
   if( count < 1 ){
+    return false;
+  }
+  if( !canAddCountRows(count) ){
     return false;
   }
 
@@ -216,6 +240,9 @@ bool AbstractTableModel::rowAndCountIsValidForRemoveRows(int row, int count) con
   if(count < 1){
     return false;
   }
+  if( !Mdt::Numeric::canAdd(row, count) ){
+    return false;
+  }
   if( (row + count) > rowCountWithoutParentIndex() ){
     return false;
   }
@@ -299,6 +326,11 @@ bool AbstractTableModel::removeRows(int row, int count, const QModelIndex & pare
   endRemoveRows();
 
   return true;
+}
+
+int AbstractTableModel::doMaxRowCount() const
+{
+  return std::numeric_limits<int>::max();
 }
 
 QVariant AbstractTableModel::horizontalHeaderDisplayRoleData(int column) const noexcept

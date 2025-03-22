@@ -51,6 +51,14 @@ mdt_add_test(
 )
 
 mdt_add_test(
+  NAME AbstractTableModel_MaxRowCount_Test
+  TARGET abstractTableModel_MaxRowCount_Test
+  DEPENDENCIES Mdt::ItemModel Mdt::ItemModelTestLib Mdt::ItemModelTestCommon Mdt::Catch2Main Mdt::Catch2Qt
+  SOURCE_FILES
+    src/AbstractTableModel_MaxRowCount_Test.cpp
+)
+
+mdt_add_test(
   NAME AbstractTableModel_InsertRows_Test
   TARGET abstractTableModel_InsertRows_Test
   DEPENDENCIES Mdt::ItemModel Mdt::ItemModelTestLib Mdt::ItemModelTestCommon Mdt::Catch2Main Mdt::Catch2Qt

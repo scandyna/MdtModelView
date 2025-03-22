@@ -284,6 +284,19 @@ namespace Mdt{ namespace ItemModel{
    * };
    * \endcode
    *
+   * Sometimes, a domain specific limit of the count of rows can be useful.
+   * This can be done by overriding doMaxRowCount() :
+   * \code
+   * int doMaxRowCount() const override
+   * {
+   *   return 1500;
+   * }
+   * \endcode
+   *
+   * Methods like rowAndCountIsValidForInsertRows(), insertRows() will take this value into account.
+   * \sa maxRowCount()
+   * \sa canAddCountRows()
+   *
    * Example of a model that does not support removing rows at any valid place,
    * but supports removing the last row:
    * \code
@@ -350,7 +363,7 @@ namespace Mdt{ namespace ItemModel{
    *
    * \todo We should remove noexcept in the contract.
    * Think about models that maybe fetches data from file, DB, etc..
-   * Thera are also incoherences between displayRoleData() , editRoleData() , setDisplayRoleData() , setEditRoleData() ...
+   * There are also incoherences between displayRoleData() , editRoleData() , setDisplayRoleData() , setEditRoleData() ...
    *
    * \sa StlContiguousContainerAdapter
    */
@@ -362,7 +375,8 @@ namespace Mdt{ namespace ItemModel{
 
     /*! \brief Construct an abstract table model
      */
-    explicit AbstractTableModel(QObject *parent = nullptr) noexcept;
+    explicit
+    AbstractTableModel(QObject *parent = nullptr) noexcept;
 
     /*! \brief Get count of rows
      *
@@ -370,6 +384,12 @@ namespace Mdt{ namespace ItemModel{
      * otherwise returns 0.
      */
     int rowCount(const QModelIndex & parent = QModelIndex()) const override;
+
+    /*! \brief Get the maximum allowed count of rows
+     *
+     * Will call doMaxRowCount()
+     */
+    int maxRowCount() const;
 
     /*! \brief Get count of columns
      *
@@ -513,6 +533,18 @@ namespace Mdt{ namespace ItemModel{
       return doSupportsInsertRows();
     }
 
+    /*! \brief Check if given \a count rows can be added
+     *
+     * If rowCount() + \a count can't be represented by int,
+     * returns false.
+     *
+     * If rowCount() + \a count exceeds maxRowCount(),
+     * returns false.
+     *
+     * \pre \a count must be >= 1
+     */
+    bool canAddCountRows(int count) const;
+
     /*! \brief Check if given set of row and count is valid to insert rows
      *
      * A row < 0 is not valid.
@@ -521,6 +553,10 @@ namespace Mdt{ namespace ItemModel{
      *
      * A count < 1 is not valid.
      *
+     * Will also return false if adding \a count rows
+     * exceeds the limit of maximum allowed rows.
+     *
+     * \sa canAddCountRows()
      * \sa insertRows()
      */
     bool rowAndCountIsValidForInsertRows(int row, int count) const noexcept;
@@ -665,6 +701,17 @@ namespace Mdt{ namespace ItemModel{
      */
     virtual
     int rowCountWithoutParentIndex() const noexcept = 0;
+
+    /*! \brief Get the maximum allowed count of rows
+     *
+     * This method is called by maxRowCount().
+     *
+     * This default implementation returns int max.
+     *
+     * \post must return a value > 0
+     */
+    virtual
+    int doMaxRowCount() const;
 
     /*! \brief Get count of columns
      *

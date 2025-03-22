@@ -15,6 +15,7 @@ add_library(Mdt_ItemModelTestCommon STATIC
   DefaultHeaderTableModel.cpp
   CustomHeaderTableModel.cpp
   ItemSelectionModelTester.cpp
+  MaxRowCountTableModel.cpp
 )
 add_library(Mdt::ItemModelTestCommon ALIAS Mdt_ItemModelTestCommon)
 

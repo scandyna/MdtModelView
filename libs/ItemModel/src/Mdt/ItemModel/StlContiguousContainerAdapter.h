@@ -520,7 +520,7 @@ namespace Mdt{ namespace ItemModel{
    *
    *   // Methods identical to the read only example omitted here
    *
-   *   int maxRowCount() const override
+   *   int doMaxRowCount() const override
    *   {
    *     return mList.maxRowCount();
    *   }
@@ -540,10 +540,6 @@ namespace Mdt{ namespace ItemModel{
    *   Mdt::ItemModel::StlContiguousContainerAdapter<ListWithInsertAndLimit, ListWithInsertAndLimitTableModelAdapterFunctionMap> mList;
    * };
    * \endcode
-   *
-   * \todo AbstractTableModel should provide maxRowCount() virtual method defaulted to int max
-   *
-   * \todo This adapter should also provide maxRowCount()
    *
    * \todo explain that this is not limited to insert()
    *
@@ -1326,9 +1322,6 @@ namespace Mdt{ namespace ItemModel{
      *
      * This also implies that rowCount() + \a count can be represented
      * by size_type .
-     *
-     * \todo AbstractTableModel will have the same issue to deal with
-     * Provide a common helper
      *
      * \pre \a count must be >= 1
      */

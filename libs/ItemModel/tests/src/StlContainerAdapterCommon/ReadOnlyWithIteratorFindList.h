@@ -31,9 +31,9 @@ class ReadOnlyWithIteratorFindList
     return mList.at(index);
   }
 
-  const_iterator findItemWithId(int id) const noexcept
-  {
-  }
+  // const_iterator findItemWithId(int id) const noexcept
+  // {
+  // }
 
   const_iterator cbegin() const noexcept
   {

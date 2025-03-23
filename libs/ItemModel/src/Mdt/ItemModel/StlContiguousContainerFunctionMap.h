@@ -16,9 +16,8 @@ namespace Mdt{ namespace ItemModel{
 
   /*! \brief STL ContiguousContainer function map for STL adapters
    *
-   * \todo add maxSize()
-   *
    * \sa StlContiguousContainerAdapter
+   * \sa SharedStlContiguousContainerAdapter
    * \sa https://en.cppreference.com/w/cpp/named_req/ContiguousContainer
    */
   template<typename Container>

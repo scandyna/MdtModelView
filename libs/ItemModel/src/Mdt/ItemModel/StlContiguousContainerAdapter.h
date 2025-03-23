@@ -25,6 +25,8 @@ namespace Mdt{ namespace ItemModel{
 
   /*! \brief Adapter to use STL contiguous containers with Qt item models
    *
+   * \todo fix noexcept
+   *
    * In Qt model/view, row acces is int index based.
    * In the STL containers, index is std::size_t or iterator based.
    *
@@ -673,12 +675,6 @@ namespace Mdt{ namespace ItemModel{
    * };
    * \endcode
    *
-   * \subsection Mdt_ItemModel_StlContiguousContainerAdapter_ResizableContainers_RemoveAt Remove an element at a given index
-   *
-   * \todo Document + implement or remove
-   * Note: item model implements removeRows().
-   * indexFromRow() is alos documented above.
-   * This part should be removed !!
    *
    * \section Mdt_ItemModel_StlContiguousContainerAdapter_UseStlConformContainer Use STL conform container
    *
@@ -778,42 +774,6 @@ namespace Mdt{ namespace ItemModel{
    *
    * The above example is almost a complete implementation of a memory table model (header data is missing).
    *
-   * \todo rowFromIndex()
-   * \todo indexFromRow()
-   *
-   *
-   * \todo document minimal requirements on the container.
-   * For types, size_type and const_reference .
-   *
-   *
-   * \todo Discuss default constructed:
-   * - Should it exist in adapter ? Yes
-   * - Should it be imposed ?
-   * - For the shared version, should it instanciate an empty container, or be a nullptr ??
-   *   For the nullptr version, noexcept + not imposes default constructible + no CPU waste
-   *   But, should be able to construct the container on insert (?)
-   *
-   * \todo What about read only containers ?
-   * We should not impose to be mutable.
-   *
-   * \todo What about resizable containers ?
-   * We should not impose to provide insert / erase
-   *
-   * \note The name StlContiguousContainerAdapter requires all the std::vector functions ?
-   *
-   * Note this:
-   * \code
-   * bool insertXXX(...)
-   * {
-   *   if constexpr(CanInsert){ // OR SupportsInsert - To be coherent with AbstractTableModel
-   *     mContainer.insert(...);
-   *     return true;
-   *   }
-   *   return false;
-   * }
-   * \endcode
-   *
-   * \todo Put usage example
    *
    * \section Mdt_ItemModel_StlContiguousContainerAdapter_MoreRealReadOnlyContainer A more real read only container example
    *
@@ -1013,11 +973,11 @@ namespace Mdt{ namespace ItemModel{
    *
    * \sa SharedStlContiguousContainerAdapter
    * \sa AbstractTableModel
+   * \sa StlContiguousContainerFunctionMap
    * \sa https://doc.qt.io/qt-6/qabstractitemmodel.html
    * \sa https://doc.qt.io/qt-6/qmodelindex.html
    * \sa https://en.cppreference.com/w/cpp/named_req/ContiguousContainer
    *
-   * \todo fix noexcept
    *
    * \section Mdt_ItemModel_StlContiguousContainerAdapter_DifficultiesAdapterSolves Some difficulties this adapter helps to solve
    *

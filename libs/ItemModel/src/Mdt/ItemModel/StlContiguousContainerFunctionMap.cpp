@@ -8,7 +8,3 @@
  **
  *****************************************************************************************/
 #include "StlContiguousContainerFunctionMap.h"
-
-namespace Mdt{ namespace ItemModel{
-
-}} // namespace Mdt{ namespace ItemModel{

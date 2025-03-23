@@ -23,39 +23,6 @@
 
 namespace Mdt{ namespace ItemModel{
 
-  /*! \brief Adapter to use STL style containers with Qt item models
-   *
-   *
-   * This adapter can be used with containers that are domain specific,
-   * and that do not provide all the STL required interface.
-   *
-   * Goal is to avoid having to adapt the container itself
-   * to be usable with an item model.
-   *
-   * \todo fix noexcept
-   *
-   * \tparam Container
-   * \tparam SizeType
-   *
-   * \tparam ValueType STL value_type provided by the container.
-   * This is a required type, void is not allowed.
-   * const_reference is also deduced from ValueType.
-   *
-   * \tparam ConstIterator STL const_iterator provided by the container.
-   * Can be void if the container not provides const_iterator.
-   * If the container provides const_iterator,
-   * it also must provide cbegin() and cend().
-   *
-   * \tparam Reference STL reference provided by the container.
-   *
-   *
-   * \tparam FunctionMap
-   *
-   * \sa Mdt::ItemModel::AbstractTableModel
-   * \sa https://doc.qt.io/qt-6/qabstractitemmodel.html
-   * \sa https://doc.qt.io/qt-6/qmodelindex.html
-   */
-
   /*! \brief Adapter to use STL contiguous containers with Qt item models
    *
    * In Qt model/view, row acces is int index based.
@@ -64,12 +31,18 @@ namespace Mdt{ namespace ItemModel{
    * A goal of this adapter is to help to convert between those types
    * in some checked way (contract programming based).
    *
+   * This adapter can be used with containers that are domain specific,
+   * and that do not provide all the STL required interface.
+   *
    * To be usable with domain specific containers,
    * this adapter requires a minimal subset of the STL requirements.
    *
    * To avoid having to modify domain specific containers,
    * a \a FunctionMap can be provided,
    * to map the domain specific container's methods to this adapter.
+   *
+   * \note This adapter owns the underlaying container.
+   * If the container should be shared, use SharedStlContiguousContainerAdapter.
    *
    * \section Mdt_ItemModel_StlContiguousContainerAdapter_MinimalReadOnlyContainer A minimal read only container example
    *
@@ -341,7 +314,7 @@ namespace Mdt{ namespace ItemModel{
    * };
    * \endcode
    *
-   * Notice that we not provide \a reference and \a atRowMutable() anymore.
+   * Notice that we not provide \a reference and \a atIndexMutable() anymore.
    *
    * Here is an example for the mutation part of a table model:
    * \code
@@ -379,7 +352,7 @@ namespace Mdt{ namespace ItemModel{
    * \section Mdt_ItemModel_StlContiguousContainerAdapter_ResizableContainers Resizable container examples
    *
    * Some containers supports inserting elements at any place.
-   * This maps to Qt model insertRows().
+   * This maps to Qt model %insertRows().
    *
    * Some containers only provides methods like push_back().
    *
@@ -541,7 +514,6 @@ namespace Mdt{ namespace ItemModel{
    * };
    * \endcode
    *
-   * \todo explain that this is not limited to insert()
    *
    * \subsection Mdt_ItemModel_StlContiguousContainerAdapter_ResizableContainers_PushBack Container that provides push_back() or similar
    *
@@ -612,6 +584,9 @@ namespace Mdt{ namespace ItemModel{
    *   Mdt::ItemModel::StlContiguousContainerAdapter<ListWithAppend, ListWithAppendTableModelAdapterFunctionMap> mList;
    * };
    * \endcode
+   *
+   * \note Defining a maximum count of elements is also possible as explained above:
+   * \ref Mdt_ItemModel_StlContiguousContainerAdapter_ResizableContainers_InsertAndLimit
    *
    * \subsection Mdt_ItemModel_StlContiguousContainerAdapter_ResizableContainers_Erase Remove elements with erase()
    *
@@ -701,6 +676,9 @@ namespace Mdt{ namespace ItemModel{
    * \subsection Mdt_ItemModel_StlContiguousContainerAdapter_ResizableContainers_RemoveAt Remove an element at a given index
    *
    * \todo Document + implement or remove
+   * Note: item model implements removeRows().
+   * indexFromRow() is alos documented above.
+   * This part should be removed !!
    *
    * \section Mdt_ItemModel_StlContiguousContainerAdapter_UseStlConformContainer Use STL conform container
    *
@@ -1032,89 +1010,21 @@ namespace Mdt{ namespace ItemModel{
    * we could have chosen to adopt another strategy, like precondition that value exists,
    * or throwing an exception.
    *
-   * \code
-   * class InterfaceListTableModel : QAbstractTableModel
-   * {
-   *  public:
    *
-   *   // Constructor and other methods omitted here
+   * \sa SharedStlContiguousContainerAdapter
+   * \sa AbstractTableModel
+   * \sa https://doc.qt.io/qt-6/qabstractitemmodel.html
+   * \sa https://doc.qt.io/qt-6/qmodelindex.html
+   * \sa https://en.cppreference.com/w/cpp/named_req/ContiguousContainer
    *
-   *   int rowCount( const QModelIndex &parent = QModelIndex() ) const
-   *   {
-   *     // parent checking omitted here
-   *     return mList.rowCount();
-   *   }
+   * \todo fix noexcept
    *
-   *   QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const
-   *   {
-   *     // index + role checking omitted here
-   *     switch( index.column() ){
-   *       case 0:
-   *         return mList.atRow( index.row() ).name();
-   *       case 1:
-   *         return mList.atRow( index.row() ).parameterValue(); // HEX formatting omitted here
-   *     }
-   *
-   *     return QVariant();
-   *   }
-   *
-   *   int findRowOfParameterValue(unsigned int value) const noexcept
-   *   {
-   *     // Solution 1
-   *     // Domain container provides a find() method and exposes const_iterator anyway
-   *     const auto it = mList.container().findPositionOfParameterValue(value);
-   *     return mList.rowFromPosition(it);
-   *
-   *     // Solution 2
-   *     // Domain container provides an index based find() method
-   *     const auto index = mList.container().findIndexOfParameterValue(value);
-   *     return mList.rowFromIndex(index);
-   *
-   *     // Solution 3
-   *     // Domain container does not provide a find() method - discouraged
-   *     // Domain container has to expose const_iterator, cbegin() and cend()
-   *     const auto pred = [value](const Interface & interface) -> bool
-   *     {
-   *       return interface.parameterValue() == value;
-   *     };
-   *     return mList.findRowOf(pred);
-   *
-   *     // Solution 4 - const_iterator based
-   *     return mList.findRowOf(&InterfaceList::findPositionOfParameterValue(), value);
-   *
-   *     // Solution 5 - index based
-   *     return mList.findRowOf(&InterfaceList::findIndexOfParameterValue(), value);
-   *   }
-   *
-   *  private:
-   *
-   *   Mdt::ItemModel::StlContiguousContainerAdapter<InterfaceListTableModelAdapter> mList;
-   * };
-   * \endcode
-   *
-   * \todo put findRowOfParameterValue() solution 3-5 to the exploratory / rationale section
-   *
-   * Notice that in the %data() method, we don't have to care about int to size_type conversion.
-   * This is done by StlContiguousContainerAdapter.
-   *
-   * \code
-   * class MyTableModel : QAbstractTableModel
-   * {
-   *  public:
-   *
-   *
-   *  private:
-   *
-   *   StlContiguousContainerAdapter<MyContainer> mContainer;
-   * };
-   * \endcode
+   * \section Mdt_ItemModel_StlContiguousContainerAdapter_DifficultiesAdapterSolves Some difficulties this adapter helps to solve
    *
    * There are cases where we want to present a collection of elements,
    * based on a STL container, like std::vector,
    * by providing a Qt item model based access model.
    *
-   * \note This adapter owns the underlaying container.
-   * If the container should be shared, use SharedStlContiguousContainerAdapter.
    *
    * The first problem is the conversion between the container size type
    * and the int based indexing.
@@ -1175,12 +1085,70 @@ namespace Mdt{ namespace ItemModel{
    * is out of scope of this adapter.
    * See AbstractTableModel for that.
    *
-   * \sa SharedStlContiguousContainerAdapter
-   * \sa https://doc.qt.io/qt-6/qabstractitemmodel.html
-   * \sa https://doc.qt.io/qt-6/qmodelindex.html
-   * \sa https://en.cppreference.com/w/cpp/named_req/ContiguousContainer
    *
    * \section Mdt_ItemModel_StlContiguousContainerAdapter_Rationale Rationale
+   *
+   * Here is some of the early sketch, that mainly focused on how to find
+   * a row regarding a given condition:
+   * \code
+   * class InterfaceListTableModel : QAbstractTableModel
+   * {
+   *  public:
+   *
+   *   // Constructor and other methods omitted here
+   *
+   *   int rowCount( const QModelIndex &parent = QModelIndex() ) const
+   *   {
+   *     // parent checking omitted here
+   *     return mList.rowCount();
+   *   }
+   *
+   *   QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const
+   *   {
+   *     // index + role checking omitted here
+   *     switch( index.column() ){
+   *       case 0:
+   *         return mList.atRow( index.row() ).name();
+   *       case 1:
+   *         return mList.atRow( index.row() ).parameterValue(); // HEX formatting omitted here
+   *     }
+   *
+   *     return QVariant();
+   *   }
+   *
+   *   int findRowOfParameterValue(unsigned int value) const noexcept
+   *   {
+   *     // Solution 1
+   *     // Domain container provides a find() method and exposes const_iterator anyway
+   *     const auto it = mList.container().findPositionOfParameterValue(value);
+   *     return mList.rowFromPosition(it);
+   *
+   *     // Solution 2
+   *     // Domain container provides an index based find() method
+   *     const auto index = mList.container().findIndexOfParameterValue(value);
+   *     return mList.rowFromIndex(index);
+   *
+   *     // Solution 3
+   *     // Domain container does not provide a find() method - discouraged
+   *     // Domain container has to expose const_iterator, cbegin() and cend()
+   *     const auto pred = [value](const Interface & interface) -> bool
+   *     {
+   *       return interface.parameterValue() == value;
+   *     };
+   *     return mList.findRowOf(pred);
+   *
+   *     // Solution 4 - const_iterator based
+   *     return mList.findRowOf(&InterfaceList::findPositionOfParameterValue(), value);
+   *
+   *     // Solution 5 - index based
+   *     return mList.findRowOf(&InterfaceList::findIndexOfParameterValue(), value);
+   *   }
+   *
+   *  private:
+   *
+   *   Mdt::ItemModel::StlContiguousContainerAdapter<InterfaceListTableModelAdapter> mList;
+   * };
+   * \endcode
    *
    */
   template<typename Container, typename FunctionMap>
@@ -1372,15 +1340,13 @@ namespace Mdt{ namespace ItemModel{
 
     /*! \brief Append an element
      *
-     * \todo precondition: the container must be able to store another element
-     *
      * To use this method, the function map must have a push_back function of this form:
      * \code
      * static
      * void push_back(Container & container, const_reference value);
      * \endcode
      *
-     * \pre it must be possible to a row
+     * \pre it must be possible to add 1 row
      */
     void appendRow(const_reference value)
     {

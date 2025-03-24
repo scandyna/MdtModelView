@@ -50,6 +50,7 @@
  * \subsection ItemModel_StlContainerAdapter STL Container adapters
  *
  * \sa Mdt::ItemModel::StlContiguousContainerAdapter
+ * \sa Mdt::ItemModel::SharedStlContiguousContainerAdapter
  *
  * \subsection ItemModel_StlHelpFunctions STL helper functions
  *

@@ -237,7 +237,7 @@ mdt_add_test(
 mdt_add_test(
   NAME SharedStlContiguousContainerAdapterTest
   TARGET sharedStlContiguousContainerAdapterTest
-  DEPENDENCIES Mdt::ItemModel Mdt::ItemModelTestCommon Mdt::Catch2Main Mdt::Catch2Qt
+  DEPENDENCIES Mdt::ItemModel Mdt::ItemModelStlContainerAdapterTestCommon Mdt::ItemModelTestCommon Mdt::Catch2Main Mdt::Catch2Qt
   SOURCE_FILES
     src/SharedStlContiguousContainerAdapterTest.cpp
 )

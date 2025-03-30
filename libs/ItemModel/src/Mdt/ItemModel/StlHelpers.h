@@ -16,6 +16,7 @@
 #include "Mdt/Numeric/Limits.h"
 #include "Mdt/Numeric/BasicConversion.h"
 #include <iterator>
+#include <type_traits>
 #include <cassert>
 
 namespace Mdt{ namespace ItemModel{
@@ -90,6 +91,42 @@ namespace Mdt{ namespace ItemModel{
     }
 
     return (stlContainerElementCount<Container, FunctionMap>(container) + count) <= stlContainerMaxElementCount<Container, FunctionMap>(container);
+  }
+
+  /*! \brief Check if given iterator \a pos is in range of given container
+   *
+   * Returns true if \a pos is in range of the container,
+   * and represents an index that is convertible to int.
+   * Otherwise returns false.
+   *
+   * To use this method, the function map must have a cbegin() function of this form:
+   * \code
+   * static
+   * const_iterator cbegin(const Container & container) noexcept;
+   * \endcode
+   *
+   * \pre FunctionMap::difference_type must be defined
+   * \pre FunctionMap::const_iterator must be defined
+   */
+  template< typename Container, typename FunctionMap = StlContiguousContainerFunctionMap<Container>,
+            typename const_iterator = Mdt::TypeTraits::member_const_iterator_or_void_pointer<FunctionMap> >
+  bool positionIsInRangeOfStlContainer(const Container & container, const_iterator pos)
+  {
+    static_assert( !Mdt::TypeTraits::is_void_or_void_pointer<const_iterator>(),
+                   "call Mdt::ItemModel::positionIsInRangeOfStlContainer() requires FunctionMap::const_iterator to be defined" );
+    using difference_type = Mdt::TypeTraits::member_difference_type_or_void<FunctionMap>;
+    static_assert( !std::is_void_v<difference_type>, "call Mdt::ItemModel::positionIsInRangeOfStlContainer() requires FunctionMap::difference_type to be defined" );
+
+    const difference_type dIndex = std::distance(FunctionMap::cbegin(container), pos);
+    if(dIndex < 0){
+      return false;
+    }
+    if( !Mdt::Numeric::int_canHoldValueOf_T(dIndex) ){
+      return false;
+    }
+    int row = Mdt::Numeric::int_from_T(dIndex);
+
+    return row < stlContainerElementCount<Container, FunctionMap>(container);
   }
 
   /*! \brief Inserts \a count elements into the container before the given \a index

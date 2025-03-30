@@ -93,6 +93,17 @@ TEST_CASE("canAddCountElementsToStlContainer")
   }
 }
 
+TEST_CASE("positionIsInRangeOfStlContainer")
+{
+  std::vector<int> v{1,2,3};
+
+  CHECK( positionIsInRangeOfStlContainer( v, v.cbegin() ) );
+  CHECK( positionIsInRangeOfStlContainer( v, v.cbegin()+1 ) );
+  CHECK( positionIsInRangeOfStlContainer( v, v.cbegin()+2 ) );
+  CHECK( !positionIsInRangeOfStlContainer( v, v.cbegin()+3 ) );
+  CHECK( !positionIsInRangeOfStlContainer( v, v.cend() ) );
+}
+
 TEST_CASE("insertToStlContainer")
 {
   SECTION("insert to an empty container")

@@ -1400,16 +1400,7 @@ namespace Mdt{ namespace ItemModel{
       static_assert( !Mdt::TypeTraits::is_void_or_void_pointer<const_iterator>(),
                      "call StlContiguousContainerAdapter::positionIsInRange() requires FunctionMap::const_iterator to be defined" );
 
-      const difference_type dIndex = std::distance(FunctionMap::cbegin(mContainer), pos);
-      if(dIndex < 0){
-        return false;
-      }
-      if( !Mdt::Numeric::int_canHoldValueOf_T(dIndex) ){
-        return false;
-      }
-      int row = Mdt::Numeric::int_from_T(dIndex);
-
-      return row < rowCount();
+      return positionIsInRangeOfStlContainer<Container, FunctionMap>(mContainer, pos);
     }
 
     /*! \brief Get the row from given iterator \a pos

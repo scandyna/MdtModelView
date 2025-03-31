@@ -99,7 +99,7 @@ namespace Mdt{ namespace ItemModel{
    * and represents an index that is convertible to int.
    * Otherwise returns false.
    *
-   * To use this method, the function map must have a cbegin() function of this form:
+   * To use this function, the function map must have a cbegin() function of this form:
    * \code
    * static
    * const_iterator cbegin(const Container & container) noexcept;
@@ -124,9 +124,42 @@ namespace Mdt{ namespace ItemModel{
     if( !Mdt::Numeric::int_canHoldValueOf_T(dIndex) ){
       return false;
     }
-    int row = Mdt::Numeric::int_from_T(dIndex);
+    int index = Mdt::Numeric::int_from_T(dIndex);
 
-    return row < stlContainerElementCount<Container, FunctionMap>(container);
+    return index < stlContainerElementCount<Container, FunctionMap>(container);
+  }
+
+  /*! \brief Get the index, as int, from given iterator \a pos in given container
+   *
+   * To use this function, the function map must have a cbegin() function of this form:
+   * \code
+   * static
+   * const_iterator cbegin(const Container & container) noexcept;
+   * \endcode
+   *
+   * \pre FunctionMap::difference_type must be defined
+   * \pre FunctionMap::const_iterator must be defined
+   * \pre \a pos must be in range
+   * \sa positionIsInRangeOfStlContainer()
+   */
+  template< typename Container, typename FunctionMap = StlContiguousContainerFunctionMap<Container>,
+            typename const_iterator = Mdt::TypeTraits::member_const_iterator_or_void_pointer<FunctionMap> >
+  int indexFromPositionInStlContainer(const Container & container, const_iterator pos)
+  {
+    static_assert( !Mdt::TypeTraits::is_void_or_void_pointer<const_iterator>(),
+                   "call Mdt::ItemModel::indexFromPositionInStlContainer() requires FunctionMap::const_iterator to be defined" );
+    using difference_type = Mdt::TypeTraits::member_difference_type_or_void<FunctionMap>;
+    static_assert( !std::is_void_v<difference_type>, "call Mdt::ItemModel::indexFromPositionInStlContainer() requires FunctionMap::difference_type to be defined" );
+    assert(( positionIsInRangeOfStlContainer<Container, FunctionMap>(container, pos) ));
+
+    const difference_type dIndex = std::distance(FunctionMap::cbegin(container), pos);
+    assert( Mdt::Numeric::int_canHoldValueOf_T(dIndex) );
+    assert( dIndex >= 0 );
+
+    int index = Mdt::Numeric::int_from_T(dIndex);
+    assert(( index < stlContainerElementCount<Container, FunctionMap>(container) ));
+
+    return index;
   }
 
   /*! \brief Inserts \a count elements into the container before the given \a index

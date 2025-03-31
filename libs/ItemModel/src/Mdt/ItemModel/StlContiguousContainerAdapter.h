@@ -1423,13 +1423,7 @@ namespace Mdt{ namespace ItemModel{
                      "call StlContiguousContainerAdapter::rowFromPosition() requires FunctionMap::const_iterator to be defined" );
       assert( positionIsInRange(pos) );
 
-      const difference_type dIndex = std::distance(FunctionMap::cbegin(mContainer), pos);
-      assert( Mdt::Numeric::int_canHoldValueOf_T(dIndex) );
-
-      int row = Mdt::Numeric::int_from_T(dIndex);
-      assert( row < rowCount() );
-
-      return row;
+      return indexFromPositionInStlContainer<Container, FunctionMap>(mContainer, pos);
     }
 
     /*! \brief Access the container

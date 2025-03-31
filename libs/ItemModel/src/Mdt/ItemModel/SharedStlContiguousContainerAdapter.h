@@ -115,47 +115,6 @@ namespace Mdt{ namespace ItemModel{
    * Notice that we don't have to care about int / size_type conversions.
    * Also, as long as no container was set, rowCount() returns 0. 
    *
-   * \todo Discuss default constructed:
-   * - Should it exist in adapter ? Yes
-   * - Should it be imposed ?
-   * - For the shared version, should it instanciate an empty container, or be a nullptr ??
-   *   For the nullptr version, noexcept + not imposes default constructible + no CPU waste
-   *   But, should be able to construct the container on insert (?)
-   *
-   * \todo Put usage example
-   *
-   * \code
-   * class MyTableModel : QAbstractTableModel
-   * {
-   *  public:
-   *
-   *   void setContainer(std::shared_ptr<MyContainer> container)
-   *   {
-   *     mContainer = container;
-   *   }
-   *
-   *  private:
-   *
-   *   SharedStlContiguousContainerAdapter<MyContainer> mContainer;
-   * };
-   * \endcode
-   *
-   * \code
-   * class SharedStlContiguousContainerAdapter
-   * {
-   *  public:
-   *
-   *   setContainer(shared_ptr<MyContainer> container)
-   *   {
-   *     mContainer = container;
-   *   }
-   *
-   *  private:
-   *
-   *   shared_ptr<Container> mContainer;
-   * };
-   * \endcode
-   *
    * \sa StlContiguousContainerAdapter
    * \sa AbstractTableModel
    */
@@ -466,6 +425,59 @@ namespace Mdt{ namespace ItemModel{
       assert( index < FunctionMap::size(*mContainer) );
 
       return Mdt::Numeric::int_from_T(index);
+    }
+
+    /*! \brief Check if given iterator \a pos is in range
+     *
+     * Returns true if \a pos is in range of the container,
+     * and represents an index that is convertible to int.
+     * Otherwise returns false.
+     *
+     * To use this method, the function map must have a cbegin() function of this form:
+     * \code
+     * static
+     * const_iterator cbegin(const Container & container) noexcept;
+     * \endcode
+     *
+     * \pre FunctionMap::difference_type must be defined
+     * \pre FunctionMap::const_iterator must be defined
+     * \pre This adapter must reference a container
+     * \sa setContainer()
+     */
+    bool positionIsInRange(const_iterator pos) const
+    {
+      static_assert( !std::is_void_v<difference_type>, "call SharedStlContiguousContainerAdapter::positionIsInRange() requires FunctionMap::difference_type to be defined" );
+      static_assert( !Mdt::TypeTraits::is_void_or_void_pointer<const_iterator>(),
+                     "call SharedStlContiguousContainerAdapter::positionIsInRange() requires FunctionMap::const_iterator to be defined" );
+      assert(mContainer != nullptr);
+
+      return positionIsInRangeOfStlContainer<Container, FunctionMap>(*mContainer, pos);
+    }
+
+    /*! \brief Get the row from given iterator \a pos
+     *
+     * To use this method, the function map must have a cbegin() function of this form:
+     * \code
+     * static
+     * const_iterator cbegin(const Container & container) noexcept;
+     * \endcode
+     *
+     * \pre FunctionMap::difference_type must be defined
+     * \pre FunctionMap::const_iterator must be defined
+     * \pre \a pos must be in range
+     * \sa positionIsInRange()
+     * \pre This adapter must reference a container
+     * \sa setContainer()
+     */
+    int rowFromPosition(const_iterator pos) const
+    {
+      static_assert( !std::is_void_v<difference_type>, "call SharedStlContiguousContainerAdapter::rowFromPosition() requires FunctionMap::difference_type to be defined" );
+      static_assert( !Mdt::TypeTraits::is_void_or_void_pointer<const_iterator>(),
+                     "call SharedStlContiguousContainerAdapter::rowFromPosition() requires FunctionMap::const_iterator to be defined" );
+      assert(mContainer != nullptr);
+      assert( positionIsInRange(pos) );
+
+      return indexFromPositionInStlContainer<Container, FunctionMap>(*mContainer, pos);
     }
 
     /*! \brief Access the container

@@ -31,6 +31,8 @@
 #include "ListWithAppendTableModelAdapterFunctionMap.h"
 #include "ListWithErase.h"
 #include "ListWithEraseTableModelAdapterFunctionMap.h"
+#include "ReadOnlyWithIteratorFindList.h"
+#include "ReadOnlyWithIteratorFindListTableModelAdapterFunctionMap.h"
 
 using namespace Mdt::ItemModel;
 
@@ -49,6 +51,8 @@ using ListWithAppendAdapted = SharedStlContiguousContainerAdapter<ListWithAppend
 using ListWithInsertAndLimitAdapted = SharedStlContiguousContainerAdapter<ListWithInsertAndLimit, ListWithInsertAndLimitTableModelAdapterFunctionMap>;
 
 using ListWithEraseAdapted = SharedStlContiguousContainerAdapter<ListWithErase, ListWithEraseTableModelAdapterFunctionMap>;
+
+using ReadOnlyWithIteratorFindListAdapted = SharedStlContiguousContainerAdapter<ReadOnlyWithIteratorFindList, ReadOnlyWithIteratorFindListTableModelAdapterFunctionMap>;
 
 
 TEMPLATE_TEST_CASE("default_constructed", "", DefaultConstructibleOnlyListAdapted, CopyConstructibleOnlyListAdapted, MoveConstructibleOnlyListAdapted, ReadOnlyListAdapted)
@@ -157,6 +161,32 @@ TEST_CASE("rowFromIndex")
 
   CHECK( adapter.rowFromIndex(0) == 0 );
   CHECK( adapter.rowFromIndex(1) == 1 );
+}
+
+TEST_CASE("positionIsInRange")
+{
+  ReadOnlyWithIteratorFindListAdapted adapter;
+  auto list = std::make_shared<ReadOnlyWithIteratorFindList>( ReadOnlyWithIteratorFindList::fromItemList({{1,"A"},{2,"B"},{3,"C"}}) );
+  adapter.setContainer(list);
+  REQUIRE( adapter.rowCount() == 3 );
+
+  CHECK( adapter.positionIsInRange( list->cbegin() ) );
+  CHECK( adapter.positionIsInRange( list->cbegin()+1 ) );
+  CHECK( adapter.positionIsInRange( list->cbegin()+2 ) );
+  CHECK( !adapter.positionIsInRange( list->cbegin()+3 ) );
+  CHECK( !adapter.positionIsInRange( list->cend() ) );
+}
+
+TEST_CASE("rowFromPosition")
+{
+  ReadOnlyWithIteratorFindListAdapted adapter;
+  auto list = std::make_shared<ReadOnlyWithIteratorFindList>( ReadOnlyWithIteratorFindList::fromItemList({{1,"A"},{2,"B"},{3,"C"}}) );
+  adapter.setContainer(list);
+  REQUIRE( adapter.rowCount() == 3 );
+
+  CHECK( adapter.rowFromPosition( list->cbegin() ) == 0 );
+  CHECK( adapter.rowFromPosition( list->cbegin()+1 ) == 1 );
+  CHECK( adapter.rowFromPosition( list->cbegin()+2 ) == 2 );
 }
 
 TEST_CASE("ReadOnly_example")

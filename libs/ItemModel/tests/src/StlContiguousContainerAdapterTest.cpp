@@ -12,15 +12,15 @@
 #include "Catch2QString.h"
 // #include <catch2/catch_template_test_macros.hpp>
 #include "Item.h"
-#include "ReadOnlyList.h"
 #include "DefaultConstructibleOnlyList.h"
 #include "CopyConstructibleOnlyList.h"
 #include "MoveConstructibleOnlyList.h"
+#include "ReadOnlyList.h"
 #include "ReadOnlyListTableModelAdapterFunctionMap.h"
 #include "DefaultConstructibleOnlyListTableModelAdapterFunctionMap.h"
 #include "CopyConstructibleOnlyListTableModelAdapterFunctionMap.h"
 #include "MoveConstructibleOnlyListTableModelAdapterFunctionMap.h"
-#include "MutableList.h"
+#include "MutableListRawData.h"
 #include "MutableListRawDataTableModelAdapterFunctionMap.h"
 #include "MutableList.h"
 #include "MutableListTableModelAdapterFunctionMap.h"
@@ -34,9 +34,6 @@
 #include "ReadOnlyWithIteratorFindListTableModelAdapterFunctionMap.h"
 #include "ListWithInsertAndLimit.h"
 #include "ListWithInsertAndLimitTableModelAdapterFunctionMap.h"
-
-#include "Mdt/ItemModel/SharedStlContiguousContainerAdapter.h"
-
 
 using namespace Mdt::ItemModel;
 

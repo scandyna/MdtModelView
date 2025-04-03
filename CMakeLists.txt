@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.15)
+cmake_minimum_required(VERSION 3.19)
 
 # CMAKE_PREFIX_PATH is empty before any call to project()
 # Because set_project_version() does not exist,
@@ -143,8 +143,7 @@ endif()
 #   find_package(Qt5 REQUIRED COMPONENTS Widgets)
 # endif()
 
-# TODO: also required by ItemViewQtWidgets
-if(BUILD_EXAMPLES)
+if(BUILD_EXAMPLES OR BUILD_ITEM_VIEW_QT_WIDGETS)
   find_package(Qt5 REQUIRED COMPONENTS Widgets)
 endif()
 

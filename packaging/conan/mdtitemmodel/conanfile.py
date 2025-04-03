@@ -37,6 +37,7 @@ class MdtItemModelConan(ConanFile):
     copy(self, "README.md", source_root, self.export_sources_folder)
     copy(self, "libs/CMakeLists.txt", source_root, self.export_sources_folder)
     copy(self, "libs/ItemModel/*", source_root, self.export_sources_folder)
+    copy(self, "libs/TypeTraits/*", source_root, self.export_sources_folder)
 
   def layout(self):
     cmake_layout(self)

@@ -4,16 +4,19 @@
  ** MdtModelView
  ** Set of libraries extending the Qt model-view framework.
  **
- ** Copyright (C) 2024-2024 Philippe Steinmann.
+ ** Copyright (C) 2024-2025 Philippe Steinmann.
  **
  *****************************************************************************************/
 #include <Mdt/ItemModel/AbstractTableModel.h>
+#include <Mdt/ItemModel/StlContiguousContainerAdapter.h>
+#include <Mdt/ItemModel/StlContiguousContainerFunctionMap.h>
 #include <Mdt/ItemModel/Helpers.h>
 #include <QVariant>
 #include <QDebug>
 #include <array>
 #include <vector>
 #include <cassert>
+
 
 class ReadOnlyTableModel : public Mdt::ItemModel::AbstractTableModel
 {
@@ -35,7 +38,7 @@ class ReadOnlyTableModel : public Mdt::ItemModel::AbstractTableModel
 
   int rowCountWithoutParentIndex() const noexcept override
   {
-    return mTable.size();
+    return mTable.rowCount();
   }
 
   int columnCountWithoutParentIndex() const noexcept override
@@ -58,10 +61,10 @@ class ReadOnlyTableModel : public Mdt::ItemModel::AbstractTableModel
   QVariant displayRoleData(const QModelIndex & index) const noexcept override
   {
     assert( indexIsValidAndInRange(index) );
-    return mTable[index.row()][index.column()];
+    return mTable.atRow( index.row() )[index.column()];
   }
 
-  Table mTable;
+  Mdt::ItemModel::StlContiguousContainerAdapter< Table, Mdt::ItemModel::StlContiguousContainerFunctionMap<Table> > mTable;
 };
 
 int main()

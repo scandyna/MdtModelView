@@ -115,6 +115,16 @@ endif()
 # Compilers issues
 #######################
 
+# TODO: remove as soon as possible
+# Workaround for array-bounds, stringop-overread warning (like array subscript i is outside array bounds of ‘int [N]’)
+# See: https://gitlab.com/scandyna/mdtmodelview/-/issues/9
+# Maybe: https://gcc.gnu.org/bugzilla/show_bug.cgi?id=111415
+if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+  message(DEBUG "Workaround array-bounds, stringop-overread warning with Gcc (GL-9)")
+  add_compile_options(-Wno-array-bounds -Wno-stringop-overread)
+endif()
+
+
 # Workaround for the "too many sections" error on some MinGW compiler
 # See: https://stackoverflow.com/questions/16596876/object-file-has-too-many-sections
 if(MINGW)

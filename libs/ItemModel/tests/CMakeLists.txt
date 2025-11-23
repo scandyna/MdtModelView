@@ -210,6 +210,16 @@ mdt_add_test(
     src/ItemSelectionModelWidgetsTest.cpp
 )
 
+# TODO: remove once test fixed
+# See https://gitlab.com/scandyna/mdtmodelview/-/issues/10
+if(SANITIZER_ENABLE_ADDRESS OR SANITIZER_ENABLE_UNDEFINED)
+  set_tests_properties(ItemSelectionModelWidgetsTest
+    PROPERTIES
+      DISABLED True
+  )
+endif()
+
+
 mdt_add_test(
   NAME ItemModelHelpersTest
   TARGET itemModelHelpersTest

@@ -12,6 +12,7 @@ class MdtItemModelConan(ConanFile):
   settings = "os", "compiler", "build_type", "arch"
   options = {"shared": [True, False]}
   default_options = {"shared": True}
+  package_type = "library"
   generators = "CMakeDeps", "VirtualBuildEnv"
 
   # See: https://docs.conan.io/en/latest/reference/conanfile/attributes.html#short-paths
@@ -22,12 +23,12 @@ class MdtItemModelConan(ConanFile):
       self.version = "0.0.0"
 
   def requirements(self):
-    self.requires("qt/5.15.6")
-    self.requires("mdtcmakeconfig/0.1.0@scandyna/testing")
-    self.requires("mdtnumeric/0.0.6@scandyna/testing")
+    self.requires("qt/5.15.16", transitive_headers=True, transitive_libs=True)
+    self.requires("mdtcmakeconfig/0.2.3@scandyna/testing")
+    self.requires("mdtnumeric/0.0.7@scandyna/testing", transitive_headers=True, transitive_libs=True)
 
   def build_requirements(self):
-    self.test_requires("mdtcmakemodules/0.20.0@scandyna/testing")
+    self.test_requires("mdtcmakemodules/0.20.2@scandyna/testing")
 
   def export_sources(self):
     source_root = os.path.join(self.recipe_folder, "../../../")
@@ -67,5 +68,5 @@ class MdtItemModelConan(ConanFile):
     self.cpp_info.set_property("cmake_target_name", "Mdt0::ItemModel")
     # We have to specify the components of Qt to use, otherwise we will depend on all
     # See also https://gitlab.com/scandyna/mdtmodelview/-/issues/2
-    self.cpp_info.requires = ["mdtnumeric::mdtnumeric", "qt::qtCore"]
+    self.cpp_info.requires = ["mdtcmakeconfig::mdtcmakeconfig", "mdtnumeric::mdtnumeric", "qt::qtCore"]
     self.cpp_info.libs = ["Mdt0ItemModel"]

@@ -1,15 +1,19 @@
 from conan import ConanFile
-from conan.tools.cmake import CMakeToolchain, CMake
+from conan.tools.cmake import CMakeToolchain, CMake, cmake_layout
+from conan.tools.env import Environment, VirtualRunEnv
 
 class MdtItemViewQtWidgetsTest(ConanFile):
   settings = "os", "compiler", "build_type", "arch"
-  generators = "CMakeToolchain", "CMakeDeps"
+  generators = "CMakeDeps", "VirtualRunEnv"
+
+  def layout(self):
+    cmake_layout(self)
 
   def requirements(self):
     self.requires(self.tested_reference_str)
 
   def build_requirements(self):
-    self.test_requires("mdtcmakemodules/0.20.0@scandyna/testing")
+    self.test_requires("mdtcmakemodules/0.21.0@scandyna/testing")
 
   def generate(self):
     tc = CMakeToolchain(self)
@@ -23,4 +27,4 @@ class MdtItemViewQtWidgetsTest(ConanFile):
 
   def test(self):
     cmake = CMake(self)
-    cmake.test()
+    cmake.ctest(cli_args=["--output-on-failure", "-V"])

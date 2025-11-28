@@ -1,15 +1,18 @@
 from conan import ConanFile
-from conan.tools.cmake import CMakeToolchain, CMake
+from conan.tools.cmake import CMakeToolchain, CMake, cmake_layout
 
 class MdtItemModelTestLibTest(ConanFile):
   settings = "os", "compiler", "build_type", "arch"
-  generators = "CMakeToolchain", "CMakeDeps"
+  generators = "CMakeDeps"
+
+  def layout(self):
+    cmake_layout(self)
 
   def requirements(self):
     self.requires(self.tested_reference_str)
 
   def build_requirements(self):
-    self.test_requires("mdtcmakemodules/0.20.0@scandyna/testing")
+    self.test_requires("mdtcmakemodules/0.21.0@scandyna/testing")
 
   def generate(self):
     tc = CMakeToolchain(self)

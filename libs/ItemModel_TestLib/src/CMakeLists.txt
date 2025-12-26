@@ -33,7 +33,7 @@ target_include_directories(Mdt_ItemModel_TestLib
 target_link_libraries(Mdt_ItemModel_TestLib
   PUBLIC
     Mdt::ItemModel
-    Qt5::Core
+    Qt6::Core
     Mdt0::Numeric
 )
 

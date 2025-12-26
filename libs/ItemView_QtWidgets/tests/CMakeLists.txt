@@ -9,7 +9,7 @@ add_subdirectory(src/common)
 mdt_add_test(
   NAME ItemViewQtWidgetsHelpersTest
   TARGET itemViewQtWidgetsHelpersTest
-  DEPENDENCIES Mdt::ItemView_QtWidgets Mdt::ItemViewQtWidgetsTestCommon Mdt::ItemModelTestLib Qt5::Test
+  DEPENDENCIES Mdt::ItemView_QtWidgets Mdt::ItemViewQtWidgetsTestCommon Mdt::ItemModelTestLib Qt6::Test
   SOURCE_FILES
     src/ItemViewHelpersTest.cpp
 )

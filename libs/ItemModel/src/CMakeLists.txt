@@ -46,7 +46,7 @@ target_include_directories(Mdt_ItemModel
 
 target_link_libraries(Mdt_ItemModel
   PUBLIC
-    Qt5::Core
+    Qt6::Core
     Mdt0::Numeric
     Mdt::TypeTraits
 )

@@ -7,7 +7,7 @@ target_include_directories(Mdt_Catch2Qt
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
     $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>
 )
-target_link_libraries(Mdt_Catch2Qt PUBLIC Qt5::Core)
+target_link_libraries(Mdt_Catch2Qt PUBLIC Qt6::Core)
 add_library(Mdt::Catch2Qt ALIAS Mdt_Catch2Qt)
 
 add_library(Mdt_Catch2Main STATIC Catch2Main.cpp)

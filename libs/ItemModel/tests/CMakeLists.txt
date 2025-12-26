@@ -45,7 +45,7 @@ mdt_add_test(
 mdt_add_test(
   NAME AbstractTableModelQTLTest
   TARGET abstractTableModelQTLTest
-  DEPENDENCIES Mdt::ItemModel Mdt::ItemModelTestCommon Qt5::Test
+  DEPENDENCIES Mdt::ItemModel Mdt::ItemModelTestCommon Qt6::Test
   SOURCE_FILES
     src/AbstractTableModelQTLTest.cpp
 )
@@ -205,7 +205,7 @@ mdt_add_test(
 mdt_add_test(
   NAME ItemSelectionModelWidgetsTest
   TARGET itemSelectionModelWidgetsTest
-  DEPENDENCIES Mdt::ItemModel Mdt::ItemModelTestCommon Mdt::Catch2Main Mdt::Catch2Qt Qt5::Test Qt5::Widgets
+  DEPENDENCIES Mdt::ItemModel Mdt::ItemModelTestCommon Mdt::Catch2Main Mdt::Catch2Qt Qt6::Test Qt6::Widgets
   SOURCE_FILES
     src/ItemSelectionModelWidgetsTest.cpp
 )

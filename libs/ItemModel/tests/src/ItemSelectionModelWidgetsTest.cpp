@@ -4,7 +4,7 @@
  ** MdtModelView
  ** Set of libraries extending the Qt model-view framework.
  **
- ** Copyright (C) 2011-2023 Philippe Steinmann.
+ ** Copyright (C) 2011-2025 Philippe Steinmann.
  **
  *****************************************************************************************/
 #include "ItemSelectionModelWidgetsTest.h"
@@ -123,7 +123,7 @@ void ItemSelectionModelWidgetsTest::tableViewTest()
    * Wait until the view is visible and has called setCurrentIndex(0,0)
    */
   view.show();
-  QApplication::setActiveWindow(&view);
+  view.activateWindow();
   QVERIFY( waitForWindowActive(view) );
 
   /*
@@ -221,7 +221,7 @@ void ItemSelectionModelWidgetsTest::tableViewSelectRowsTest()
    * Wait until the view is visible and has called setCurrentIndex(0,0)
    */
   view.show();
-  QApplication::setActiveWindow(&view);
+  view.activateWindow();
   QVERIFY( waitForWindowActive(view) );
 
   /*
@@ -330,7 +330,7 @@ void ItemSelectionModelWidgetsTest::listViewTest()
    * Wait until the view is visible and has called setCurrentIndex(0,0)
    */
   view.show();
-  QApplication::setActiveWindow(&view);
+  view.activateWindow();
   QVERIFY( waitForWindowActive(view) );
 
   /*
@@ -412,7 +412,7 @@ void ItemSelectionModelWidgetsTest::treeViewTest()
    * Wait until the view is visible and has called setCurrentIndex(0,0)
    */
   view.show();
-  QApplication::setActiveWindow(&view);
+  view.activateWindow();
   QVERIFY( waitForWindowActive(view) );
 
   /*
@@ -485,7 +485,7 @@ void ItemSelectionModelWidgetsTest::modelReset()
    * Wait until the view is visible and has called setCurrentIndex(0,0)
    */
   view.show();
-  QApplication::setActiveWindow(&view);
+  view.activateWindow();
   QVERIFY( waitForWindowActive(view) );
 
   model.setTable({{1,"A"},{2,"B"},{3,"C"}});
@@ -514,7 +514,7 @@ void ItemSelectionModelWidgetsTest::currentIndexIsSetWithCorrectRowAndColumn()
    * Wait until the view is visible and has called setCurrentIndex(0,0)
    */
   view.show();
-  QApplication::setActiveWindow(&view);
+  view.activateWindow();
   QVERIFY( waitForWindowActive(view) );
 
   setViewCurrentIndexToRowAndColumn(view, 0, 0);

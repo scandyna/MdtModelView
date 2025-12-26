@@ -15,12 +15,12 @@ class MdtModelViewConan(ConanFile):
   generators = "CMakeDeps", "VirtualBuildEnv"
 
   def requirements(self):
-    self.requires("qt/5.15.16")
+    self.requires("qt/6.8.3")
     self.requires("mdtnumeric/0.0.7@scandyna/testing")
 
   def build_requirements(self):
     self.test_requires("catch2/2.13.10")
-    self.test_requires("mdtcmakemodules/0.20.2@scandyna/testing")
+    self.test_requires("mdtcmakemodules/0.22.0@scandyna/testing")
 
   def generate(self):
     tc = CMakeToolchain(self)

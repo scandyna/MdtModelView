@@ -11,7 +11,7 @@ target_link_libraries(itemselectionmodeltestwidget
   PRIVATE
     Mdt::ItemModel
     Mdt::ItemView_QtWidgets
-    Qt5::Widgets
+    Qt6::Widgets
 )
 
 if(BUILD_USE_IPO_LTO)

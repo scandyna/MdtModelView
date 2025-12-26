@@ -50,7 +50,7 @@ ItemSelectionModelTestWidget::ItemSelectionModelTestWidget(QWidget *parent)
 {
   mUi.setupUi(this);
 
-  connect(mUi.useSortFilterProxyModel, &QCheckBox::stateChanged, this, &ItemSelectionModelTestWidget::useSortFilterProfyModelIf);
+  connect(mUi.useSortFilterProxyModel, &QCheckBox::checkStateChanged, this, &ItemSelectionModelTestWidget::useSortFilterProfyModelIf);
 
   mUi.useSortFilterProxyModel->setChecked(true);
 

@@ -30,7 +30,7 @@ target_include_directories(Mdt_ItemView_QtWidgets
 target_link_libraries(Mdt_ItemView_QtWidgets
   PUBLIC
     Mdt::ItemModel
-    Qt5::Widgets
+    Qt6::Widgets
 )
 
 generate_export_header(Mdt_ItemView_QtWidgets)

@@ -136,7 +136,7 @@ endif()
 #######################
 
 find_package(Threads REQUIRED)
-find_package(Qt5 REQUIRED COMPONENTS Core)
+find_package(Qt6 REQUIRED COMPONENTS Core)
 
 
 if(USE_ITEM_MODEL_IMPORT_TARGET)
@@ -150,11 +150,11 @@ if(BUILD_ITEM_MODEL OR BUILD_ITEM_MODEL_TEST_LIB)
 endif()
 
 # if(BUILD_APPS)
-#   find_package(Qt5 REQUIRED COMPONENTS Widgets)
+#   find_package(Qt6 REQUIRED COMPONENTS Widgets)
 # endif()
 
 if(BUILD_EXAMPLES OR BUILD_ITEM_VIEW_QT_WIDGETS)
-  find_package(Qt5 REQUIRED COMPONENTS Widgets)
+  find_package(Qt6 REQUIRED COMPONENTS Widgets)
 endif()
 
 # For header only library,no component is defined.
@@ -163,12 +163,12 @@ endif()
 
 if(BUILD_TESTS)
   find_package(Catch2 REQUIRED)
-#   find_package(Qt5 REQUIRED COMPONENTS Test)
+#   find_package(Qt6 REQUIRED COMPONENTS Test)
 endif()
 
 if(BUILD_BENCHMARKS)
 #   find_package(Catch2 REQUIRED)
-  find_package(Qt5 REQUIRED COMPONENTS Test)
+  find_package(Qt6 REQUIRED COMPONENTS Test)
 endif()
 
 if(BUILD_DOCS)

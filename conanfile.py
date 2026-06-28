@@ -16,7 +16,7 @@ class MdtModelViewConan(ConanFile):
 
   def requirements(self):
     self.requires("qt/6.8.3")
-    self.requires("mdtnumeric/0.0.7@scandyna/testing")
+    self.requires("mdtnumeric/0.0.8@scandyna/testing")
 
   def build_requirements(self):
     self.test_requires("catch2/2.13.10")

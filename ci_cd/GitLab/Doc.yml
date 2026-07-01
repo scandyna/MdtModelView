@@ -1,5 +1,5 @@
 include:
-  - component: $CI_SERVER_FQDN/scandyna/gitlab-ci-cd-cpp-components/BuildApiDoc@0.3.1
+  - component: $CI_SERVER_FQDN/scandyna/gitlab-ci-cd-cpp-components/BuildApiDoc@0.3.2
     inputs:
       cmake_doc_option_string: '-DBUILD_DOCS=ON'
 

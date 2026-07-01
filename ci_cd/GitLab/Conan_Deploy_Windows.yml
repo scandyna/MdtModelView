@@ -53,7 +53,7 @@ Conan_Deploy_Windows_gcc13_x86_64_Tier2:
     - job: Conan_Deploy_Windows_gcc13_x86_64_Tier1
       artifacts: false
 
-Conan_Deploy_Windows_msvc16_x86_64_Tier2:
+Conan_Deploy_Windows_msvc_vs_17_2022_x86_64_Tier2:
   needs:
     - job: Conan_Deploy_Windows_msvc_vs_17_2022_x86_64_Tier1
       artifacts: false
